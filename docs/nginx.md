@@ -7,7 +7,7 @@
 以下是一个推荐的 `log_format` 定义示例，使用 `||` 作为字段分隔符，方便后续对日志进行拆分和解析：
 
 ```nginx
-log_format sentinel_log '$remote_addr||$remote_user||$time_local||"$request"||$status||$body_bytes_sent||"$http_referer"||"$http_user_agent"';
+log_format sentinel_log '$remote_addr||$remote_user||$time_local||$request||$status||$body_bytes_sent||$http_referer||$http_user_agent';
 ```
 
 各字段含义如下：

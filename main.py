@@ -1,6 +1,6 @@
-def main():
-    print("Hello from sentinel!")
+log_path = "/Users/grady/workplace/software/nginx/logs/access.log"
 
-
-if __name__ == "__main__":
-    main()
+with open(log_path, mode="r", encoding="utf-8") as f:
+    # print(sum(1 for _ in f))
+    for line in f:
+        print(line)
