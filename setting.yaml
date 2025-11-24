@@ -1,6 +1,14 @@
-nginx_base_path: /Users/grady/workplace/software/nginx
-nginx_log_file_path: /Users/grady/workplace/software/nginx/log/access.log
-nginx_conf_black_list_file_path: /Users/grady/workplace/software/nginx/conf/black_list.conf
-data_base_url: sqlite:///./data/sentinel.db
-web_ui: ./static
-server_port: 8080
+server:
+  host: 0.0.0.0
+  port: 8080
+  base_path: /
+  static_path: ./static
+nginx:
+  base_path: /Users/grady/workplace/software/nginx
+  log_path: /Users/grady/workplace/software/nginx/log/access.log
+  conf_path: /Users/grady/workplace/software/nginx/conf
+elasticsearch:
+  host: 127.0.0.1
+  port: 9200
+  username: elastic
+  password: <PASSWORD>

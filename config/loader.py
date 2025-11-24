@@ -1,17 +1,14 @@
 import os
 import logging
-
+from models.config import ServerConfig, NginxConfig, ElasticsearchConfig
 import yaml
 from pydantic import BaseModel, ValidationError
 
 
 class Config(BaseModel):
-    nginx_base_path: str
-    nginx_log_file_path: str
-    nginx_conf_black_list_file_path: str
-    data_base_url: str
-    web_ui: str
-    server_port: int
+    server: ServerConfig
+    nginx: NginxConfig
+    elasticsearch: ElasticsearchConfig
 
 
 def load_config(config_path: str) -> Config:

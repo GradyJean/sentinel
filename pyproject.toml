@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "elasticsearch>=9.2.0",
     "fastapi>=0.120.3",
     "joblib>=1.5.2",
     "loguru>=0.7.3",
