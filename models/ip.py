@@ -1,7 +1,7 @@
 import ipaddress
 from enum import Enum
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, Field
 from typing import Optional, List, Self
 
 
@@ -20,6 +20,7 @@ class AllowedIpSegment(BaseModel):
     """
     允许的 IP 段
     """
+    id: Optional[str] = Field(default=None, exclude=True)  # 可选的ID字段，序列化时排除
     org_name: Optional[str] = None  # 机构名称
     is_internal: Optional[bool] = None  # 是否院内机构
     start_ip: str  # 起始 IP
@@ -28,6 +29,10 @@ class AllowedIpSegment(BaseModel):
 
     @model_validator(mode="after")
     def auto_fix(self) -> Self:
+        start = int(ipaddress.ip_address(self.start_ip))
+        end = int(ipaddress.ip_address(self.end_ip))
+        if start > end:
+            self.start_ip, self.end_ip = self.end_ip, self.start_ip
         self.cidr = ip_range_to_cidr(self.start_ip, self.end_ip)
         return self
 
@@ -36,6 +41,7 @@ class IpRecord(BaseModel):
     """
     IP 记录
     """
+    id: Optional[str] = Field(default=None, exclude=True)  # 可选的ID字段，序列化时排除
     ip: str  # IP
     location: str  # 地理位置
     isp: str  # 运营商
@@ -55,6 +61,7 @@ class IpPolicy(BaseModel):
     """
     IP 策略
     """
+    id: Optional[str] = Field(default=None, exclude=True)  # 可选的ID字段，序列化时排除
     policy_type: PolicyType  # 策略类型
     start_ip: Optional[str] = None  # 起始 IP
     end_ip: Optional[str] = None  # 结束 IP

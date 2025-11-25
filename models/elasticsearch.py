@@ -208,3 +208,54 @@ ip_policy_template = {
         }
     }
 }
+"""
+    任务调度模板
+    详情参考: models.scheduler.TaskScheduler
+"""
+task_scheduler_template = {
+    "settings": {
+        "number_of_shards": 5,
+        "number_of_replicas": 0
+    },
+    "mappings": {
+        "dynamic": "strict",
+        "properties": {
+
+            "task_id": {
+                "type": "keyword"
+            },
+            "task_name": {
+                "type": "keyword"
+            },
+            "enabled": {
+                "type": "boolean"
+            },
+
+            "cron": {
+                "type": "keyword"
+            },
+            "description": {
+                "type": "text"
+            },
+
+            "last_run_at": {
+                "type": "date",
+                "format": "strict_date_optional_time||epoch_millis"
+            },
+
+            "last_status": {
+                "type": "keyword"
+            },
+
+            "last_message": {
+                "type": "text"
+            },
+            "last_cost": {
+                "type": "integer"
+            },
+            "run_count": {
+                "type": "integer"
+            }
+        }
+    }
+}
