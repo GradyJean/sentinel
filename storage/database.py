@@ -15,7 +15,6 @@ class Database:
         初始化数据库连接
         """
         try:
-            self.db_path = settings.data_base_url
             self.engine = create_engine(db_url, echo=False)
         except Exception as e:
             logging.error(f"Database initialization error: {e}")
