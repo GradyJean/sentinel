@@ -1,4 +1,8 @@
-from typing import Optional, Dict, Any
+from datetime import datetime
+from typing import Optional
+from models.elasticsearch import ElasticsearchModel
+from typing import Optional
+
 from models.elasticsearch import ElasticsearchModel
 
 
@@ -12,7 +16,7 @@ class TaskScheduler(ElasticsearchModel):
     enabled: bool = True  # 是否启用任务
     cron: Optional[str] = None  # Cron 表达式
     description: Optional[str] = None  # 任务描述
-    last_run_at: Optional[str] = None  # 最近执行时间
+    last_run_at: Optional[datetime] = None  # 最近执行时间
     last_status: Optional[str] = None  # 执行状态：success/failed/skipped
     last_message: Optional[str] = None  # 错误信息或执行信息
     last_cost: Optional[int] = None  # 执行时间（秒）
