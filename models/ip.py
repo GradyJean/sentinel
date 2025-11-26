@@ -1,8 +1,8 @@
 import ipaddress
 from enum import Enum
+from typing import Optional, List, Self
 
 from pydantic import BaseModel, model_validator, Field
-from typing import Optional, List, Self
 
 
 def ip_range_to_cidr(start_ip: str, end_ip: str) -> str:

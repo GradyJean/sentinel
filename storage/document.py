@@ -1,7 +1,7 @@
-from loguru import logger
 from datetime import datetime
 
 from elasticsearch import Elasticsearch
+from loguru import logger
 
 from config import settings
 from models.elasticsearch import *

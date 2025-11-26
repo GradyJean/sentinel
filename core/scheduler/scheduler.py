@@ -9,7 +9,7 @@ from loguru import logger
 
 from core.scheduler import tasks
 from core.scheduler.task_runner import TaskRunner
-from models.scheduler import TaskScheduler
+from models.scheduler import TaskScheduler, TaskStatus
 from service import task_scheduler_service
 
 
@@ -72,58 +72,56 @@ class SchedulerManager:
             # 获取任务
             job = self.scheduler.get_job(task_id)
             if job:
-                # 任务已存在
-                if config.enabled:
-                    # 配置已启用，更新任务
-                    self.scheduler.modify_job(
-                        job_id=task_id,
-                        trigger=CronTrigger.from_crontab(config.cron)
-                    )
-                    logger.info(f"Task [{task_id}] updated")
-                else:
-                    # 配置禁用，删除任务
-                    self.scheduler.remove_job(task_id)
-                    logger.info(f"Task [{task_id}] disabled")
+                # 任务已存在,直接更新
+                self.scheduler.modify_job(
+                    job_id=task_id,
+                    trigger=CronTrigger.from_crontab(config.cron)
+                )
+                logger.info(f"Task [{task_id}] updated")
             else:
-                # 任务不存在
-                if config.enabled:
-                    # 配置启用 创建任务
-                    self.scheduler.add_job(
-                        func=self.__task_runner_wrapper,
-                        args=(runner, config),
-                        trigger=CronTrigger.from_crontab(config.cron),
-                        id=task_id,
-                        replace_existing=True
-                    )
-                    logger.info(f"Task [{task_id}] enabled")
-                else:
-                    # 配置禁用 跳过
-                    continue
+                # 任务不存在,创建任务
+                self.scheduler.add_job(
+                    func=self.__task_runner_wrapper,
+                    args=(runner,),
+                    trigger=CronTrigger.from_crontab(config.cron),
+                    id=task_id,
+                    replace_existing=True
+                )
+                logger.info(f"Task [{task_id}] created")
 
     @staticmethod
-    async def __task_runner_wrapper(task_runner: TaskRunner, config: TaskScheduler):
+    async def __task_runner_wrapper(task_runner: TaskRunner):
         """
            通用包装器：执行前后自动更新状态、捕获异常
         """
+        config: TaskScheduler = task_scheduler_service.get(task_runner.task_id)
+        # 配置不存在 或者 禁用 跳过
+        if not config or not config.enabled:
+            return
+        now = datetime.now()
+        # 批次ID
+        batch_id = now.strftime("%Y%m%d%H%M")
+        # 判断是否重复执行
+        if batch_id == config.batch_id:
+            return
         logger.info(f"Task [{task_runner.task_id}] started")
-        # 更新状态
-        start_time = datetime.now()
-        config.last_run_at = start_time
-        config.last_status = "running"
+        # 更新状态 RUNNING
+        config.start_time = now
+        config.end_time = now
+        config.status = TaskStatus.RUNNING
+        config.message = ""
+        config.batch_id = batch_id
         task_scheduler_service.save(config)
         try:
             # 运行任务
             await task_runner.run()
-            config.last_status = "successful"
-            config.last_message = ""
+            config.status = TaskStatus.SUCCESS
             logger.info(f"Task [{task_runner.task_id}] completed")
         except Exception as e:
-            config.last_status = "failed"
-            config.last_message = str(e)
+            config.status = TaskStatus.FAILED
+            config.message = str(e)
             logger.error(f"Task [{task_runner.task_id}] failed: {e}")
         finally:
             #  更新状态
-            cost_seconds = (datetime.now() - start_time).total_seconds()
-            config.last_cost = int(cost_seconds)
-            config.run_count += 1
+            config.end_time = datetime.now()
             task_scheduler_service.save(config)

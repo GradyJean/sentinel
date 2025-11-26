@@ -1,4 +1,5 @@
 from typing import Dict, Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -246,24 +247,23 @@ task_scheduler_template = {
             "description": {
                 "type": "text"
             },
-
-            "last_run_at": {
+            "start_time": {
                 "type": "date",
                 "format": "strict_date_optional_time||epoch_millis"
             },
-
-            "last_status": {
+            "end_time": {
+                "type": "date",
+                "format": "strict_date_optional_time||epoch_millis"
+            },
+            "status": {
                 "type": "keyword"
             },
 
-            "last_message": {
+            "message": {
                 "type": "text"
             },
-            "last_cost": {
-                "type": "integer"
-            },
-            "run_count": {
-                "type": "integer"
+            "batch_id": {
+                "type": "keyword"
             }
         }
     }

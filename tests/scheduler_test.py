@@ -1,6 +1,7 @@
 # scheduler_test.py
-from core.scheduler.scheduler import SchedulerManager
 import asyncio
+
+from core.scheduler.scheduler import SchedulerManager
 
 
 async def main():
