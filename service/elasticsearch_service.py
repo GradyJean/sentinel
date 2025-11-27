@@ -1,7 +1,7 @@
 from typing import List, TypeVar, Generic, Type, Optional
 
 from loguru import logger
-
+from elasticsearch import helpers
 from models.elasticsearch import ElasticsearchModel
 from storage import es_client
 
@@ -23,10 +23,24 @@ class ElasticsearchService(Generic[E]):
 
     def get_all(self) -> List[E]:
         """
-        Get all nginx logs
+        Get all
         """
         records: List[E] = []
         res = self.es_client.search(index=self.index, body={"query": {"match_all": {}}})
+        if "hits" not in res:
+            return records
+        for hit in res["hits"]["hits"]:
+            record = self.model(**hit["_source"])
+            record.id = hit["_id"]
+            records.append(record)
+        return records
+
+    def query_list(self, query: dict) -> List[E]:
+        """
+            列表查询
+        """
+        records: List[E] = []
+        res = self.es_client.search(index=self.index, body=query)
         if "hits" not in res:
             return records
         for hit in res["hits"]["hits"]:
@@ -74,3 +88,38 @@ class ElasticsearchService(Generic[E]):
         except Exception as e:
             logger.error(e)
             return False
+
+    def batch_save(self, records: List[E]) -> bool:
+        """
+        Batch save records
+        """
+        try:
+            actions = (
+                {
+                    "_index": self.index,
+                    "_source": record.model_dump(exclude_none=True)
+                }
+                for record in records
+            )
+
+            success_count, error = helpers.bulk(
+                es_client,
+                actions,
+                request_timeout=60
+            )
+            if error:
+                logger.error(error)
+                return False
+            return success_count > 0
+        except Exception as e:
+            logger.error(e)
+            return False
+
+    def count(self, query=None):
+        """
+        Count records
+        """
+        if query is None:
+            query = {"query": {"match_all": {}}}
+        res = self.es_client.count(index=self.index, body=query)
+        return res.get("count", 0)

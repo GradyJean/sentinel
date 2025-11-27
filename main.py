@@ -7,9 +7,9 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from config import settings, setup_logger
+from storage.document import elasticsearch_index_init
 from core.scheduler.scheduler import SchedulerManager
 from exception.exception_handlers import add_exception_handlers
-from storage.document import elasticsearch_index_init
 
 
 @asynccontextmanager
