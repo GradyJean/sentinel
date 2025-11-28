@@ -15,11 +15,10 @@ from exception.exception_handlers import add_exception_handlers
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 启动时执行
-    logger.info("Starting up…")
     # 初始化日志
     setup_logger()
-    logger.info("logger initialized")
+    # 启动时执行
+    logger.info("application starting up")
     # 初始化数据库
     init_database()
     logger.info("database initialized")
@@ -30,6 +29,8 @@ async def lifespan(app: FastAPI):
     scheduler_manager = SchedulerManager()
     scheduler_manager.start()
     logger.info("scheduler started")
+    logger.info(f"application initialized with {settings.server.host}:{settings.server.port}")
+    logger.info("application startup complete")
     yield
 
     # 关闭时执行

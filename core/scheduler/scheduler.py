@@ -87,7 +87,7 @@ class SchedulerManager:
                     id=task_id,
                     replace_existing=True
                 )
-                logger.info(f"Task [{task_id}] created")
+                logger.info(f"Task [{task_id}] created cron: {config.cron}")
 
     @staticmethod
     async def __task_runner_wrapper(task_runner: TaskRunner):
@@ -111,7 +111,7 @@ class SchedulerManager:
         config.status = TaskStatus.RUNNING
         config.message = ""
         config.batch_id = batch_id
-        task_scheduler_service.save(config)
+        task_scheduler_service.merge(config)
         try:
             # 运行任务
             await task_runner.run()
@@ -124,4 +124,4 @@ class SchedulerManager:
         finally:
             #  更新状态
             config.end_time = datetime.now()
-            task_scheduler_service.save(config)
+            task_scheduler_service.merge(config)

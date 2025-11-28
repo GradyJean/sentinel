@@ -73,7 +73,7 @@ class ElasticSearchRepository(IRepository[E]):
             return False
         return res.get("result") == "deleted"
 
-    def save(self, record: E) -> bool:
+    def merge(self, record: E) -> bool:
         try:
             res = es_client.index(index=self.index, id=record.id,
                                   body=record.model_dump(exclude_none=True, mode="json"))
@@ -111,17 +111,44 @@ class ElasticSearchRepository(IRepository[E]):
         res = es_client.count(index=self.index, body=query)
         return res.get("count", 0)
 
+    def acquire_index(self, index_name: str, index_template: dict):
+        """
+        创建索引
+        :param index_name:
+        :param index_template:
+        :return:
+        """
+        self.index = index_name
+        if es_client.indices.exists(index=index_name):
+            return
+        res = es_client.indices.create(index=index_name, body=index_template)
+        acknowledged = res.get('acknowledged')
+        if acknowledged:
+            logger.info(f"{index_name} index create: {acknowledged}")
+            es_client.indices.refresh(index=index_name)
+        else:
+            raise Exception(f"{index_name} index create error: {res}")
+
+    @staticmethod
+    def get_index_template(index_name: str) -> dict:
+        """
+        获取索引模板
+        :param index_name:
+        :return:
+        """
+        return index_template_dict[index_name]["value"]
+
     @staticmethod
     def get_client():
         return es_client
 
 
 index_template_dict = {
-    "nginx_log_metadata": daily_nginx_metadata_template,
-    "allowed_ip_segment": allowed_ip_segment_template,
-    "ip_record": ip_record_template,
-    "ip_policy": ip_policy_template,
-    "task_scheduler": task_scheduler_template
+    "nginx_log_metadata": {"value": daily_nginx_metadata_template, "init": False},
+    "allowed_ip_segment": {"value": allowed_ip_segment_template, "init": True},
+    "ip_record": {"value": ip_record_template, "init": True},
+    "ip_policy": {"value": ip_policy_template, "init": True},
+    "task_scheduler": {"value": task_scheduler_template, "init": True},
 }
 
 
@@ -131,14 +158,13 @@ def init_elasticsearch():
     :return:
     """
     # 索引初始化
-    current_date = datetime.now().strftime("%Y_%m_%d")
     for index_name, template in index_template_dict.items():
-        if index_name == "nginx_log_metadata":
-            index_name = f"{index_name}_{current_date}"
         if es_client.indices.exists(index=index_name):
             continue
         else:
-            res = es_client.indices.create(index=index_name, body=template)
+            if not template["init"]:
+                continue
+            res = es_client.indices.create(index=index_name, body=template["value"])
             acknowledged = res.get('acknowledged')
             if acknowledged:
                 logger.info(f"{index_name} index init: {acknowledged}")

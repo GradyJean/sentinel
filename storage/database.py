@@ -41,7 +41,7 @@ class DatabaseRepository(IRepository[E]):
                 logging.error(f"Error deleting record: {e}")
                 return False
 
-    def save(self, record: E) -> bool:
+    def merge(self, record: E) -> bool:
         with Session(engine) as session:
             try:
                 session.merge(record)
@@ -71,6 +71,11 @@ class DatabaseRepository(IRepository[E]):
 
     @staticmethod
     def get_client():
+        """
+        获取数据库会话 不需要手动 close
+        Session 里面已经实现了 __exit__ 方法会自己close
+        commit 和 rollback 没有实现得自己写
+        """
         return Session(engine)
 
 

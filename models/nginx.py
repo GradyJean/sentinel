@@ -55,5 +55,5 @@ class LogMetaData(ElasticSearchModel):
             body_bytes_sent=int(parts[6]) if parts[6] != "" else None,
             http_referer=parts[7] if parts[7] != "" else None,
             http_user_agent=parts[8] if parts[8] != "" else None,
-            request_time=float(parts[9]) if parts[9] != "" else None
+            request_time=int(float(parts[9]) * 1000) if parts[9] != "" else None
         )

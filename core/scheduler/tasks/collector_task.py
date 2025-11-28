@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from typing import List
 
 from loguru import logger
@@ -7,10 +8,10 @@ from sqlmodel import select
 from config import settings
 from core.collector.log_collector import Collector
 from core.scheduler.task_runner import TaskRunner
-from models.log import Offsets
+from models.log import OffsetConfig
 from models.nginx import LogMetaData
 from storage.database import DatabaseRepository
-from storage.document import ElasticSearchRepository
+from storage.document import ElasticSearchRepository, E
 
 
 class LogCollectorTask(TaskRunner):
@@ -18,56 +19,80 @@ class LogCollectorTask(TaskRunner):
     日志采集任务
     """
     task_id: str = "log_collector"
-    offsets_id: str = "log_collector_offsets"
 
     def __init__(self):
-        self.offsetService = OffsetsService()
+        self.offset_service = OffsetsService()
+        self.log_metadata_service = LogMetaDataService()
         self.collector = Collector(
-            log_path=settings.nginx.log_path,
-            call_back=self.batch_save_log,
+            call_back=self.metadata_callback,
         )
 
     async def run(self):
-        file_path = settings.nginx.log_path
-        if not os.path.exists(file_path):
-            logger.error(f"日志文件不存在: {file_path}")
-            return
-        offsets = self.offsetService.get_offsets(self.offsets_id)
-        offsets = self.collector.run(offsets)
-        self.offsetService.save(Offsets(id=self.offsets_id, file_path=file_path, offsets=offsets))
+        file_path = settings.nginx.get_log_path()
+        # 文件偏移量
+        offset = 0
+        curr_date = datetime.now().strftime("%Y-%m-%d")
+        # 获取文件偏移量配置
+        offset_config = self.offset_service.get()
+        # 不是今天的文件直接偏移量归零
+        if offset_config and offset_config.collect_date == curr_date:
+            offset = offset_config.offset
+        # 文件采集并返回偏移量
+        offset = self.collector.start(file_path=file_path, offset=offset)
+        # 保存文件偏移量
+        self.offset_service.update(file_path=file_path, offset=offset)
 
-    def batch_save_log(self, log_metadata: List[LogMetaData]) -> bool:
-        """
-        批量保存日志
-        """
-        for log_metadata in log_metadata:
-            print(log_metadata)
-        return True
+    def metadata_callback(self, metadata_list: List[LogMetaData], file_path: str, offset: int) -> bool:
+        save_status = self.log_metadata_service.metadata_list_save(metadata_list)
+        if save_status:
+            # 保存文件偏移量
+            self.offset_service.update(file_path=file_path, offset=offset)
+            logger.info(f"log metadata save success: {len(metadata_list)}")
+            return True
+        return False
 
 
-class OffsetsService(DatabaseRepository[Offsets]):
+class OffsetsService(DatabaseRepository[OffsetConfig]):
     """
     日志采集任务服务
     """
+    offsets_id: str = "log_collect"
 
     def __init__(self):
-        super().__init__(Offsets)
+        super().__init__(OffsetConfig)
 
-    def get_offsets(self, id: str) -> int:
+    def get(self) -> OffsetConfig:
         """
         获取日志文件偏移量
         """
-        with self.get_client() as session:
-            record = session.exec(select(Offsets).where(Offsets.id == id)).first()
-        if record:
-            return record.offsets
-        return 0
+        return self.get_by_id(self.offsets_id)
+
+    def update(self, file_path: str, offset: int = 0):
+        """
+        保存日志文件偏移量
+        """
+
+        now = datetime.now()
+        self.merge(OffsetConfig(
+            id=self.offsets_id,
+            file_path=file_path,
+            offset=offset,
+            update_time=now,
+            collect_date=now.strftime("%Y-%m-%d")
+        ))
 
 
-class LogService(ElasticSearchRepository[LogMetaData]):
+class LogMetaDataService(ElasticSearchRepository[LogMetaData]):
     """
     日志服务
     """
 
     def __init__(self):
-        super().__init__("", LogMetaData)
+        super().__init__("nginx_log_metadata", LogMetaData)
+
+    def metadata_list_save(self, metadata_list: List[LogMetaData]) -> bool:
+        now = datetime.now()
+        index_name = f"nginx_log_metadata_{now.strftime('%Y_%m_%d')}"
+        # 创建索引
+        self.acquire_index(index_name, self.get_index_template("nginx_log_metadata"))
+        return self.batch_save(metadata_list)
