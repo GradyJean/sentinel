@@ -5,13 +5,15 @@ server:
   static_path: ./static
 nginx:
   base_path: /Users/grady/workplace/software/nginx
-  log_path: /Users/grady/workplace/software/nginx/log/access.log
+  log_path: /Users/grady/workplace/software/nginx/logs/access.log
   conf_path: /Users/grady/workplace/software/nginx/conf
   black_list_file: /Users/grady/workplace/software/nginx/conf/black_list.conf
   rate_limit_file: /Users/grady/workplace/software/nginx/conf/rate_limit.conf
 elasticsearch:
   url: http://127.0.0.1:9200
   username: elastic
-  password: <PASSWORD>
+  password: Ak9sZVbs10vRlNA793f0
 database:
   url: sqlite:///./data/sentinel.db
+geoip:
+  data_path: ./data/GeoLite2-City.mmdb

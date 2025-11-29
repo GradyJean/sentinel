@@ -1,9 +1,13 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 
+from geoip2.errors import GeoIP2Error
+from geoip2.models import City
 from loguru import logger
 
+from config import settings
 from models.ip import IpRecord, AllowedIpSegment, IpPolicy
 from storage.document import ElasticSearchRepository
+from geoip2 import database as geoip_database
 
 
 class IpRecordService(ElasticSearchRepository[IpRecord]):
@@ -91,3 +95,35 @@ class IpPolicyService(ElasticSearchRepository[IpPolicy]):
 
     def __init__(self):
         super().__init__("ip_policy", IpPolicy)
+
+
+class GeoIpService:
+    """
+    GeoIP服务
+    """
+
+    def __init__(self):
+        self.geoip_client = geoip_database.Reader(settings.geoip.data_path)
+
+    def query_city(self, ip: str) -> City | None:
+        """
+        查询IP信息
+        :param ip:
+        :return:
+        """
+        try:
+            res = self.geoip_client.city(ip)
+        except GeoIP2Error as e:
+            return None
+        return res
+
+    def query_cities(self, ips: List[str]) -> Dict[str, City | None]:
+        """
+        批量查询IP信息
+        :param ips:
+        :return:
+        """
+        results = {}
+        for ip in ips:
+            results[ip] = self.query_city(ip)
+        return results

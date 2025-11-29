@@ -60,3 +60,10 @@ class DatabaseConfig(BaseModel):
     数据库配置
     """
     url: str = Field(default="sqlite:///./data/sentinel.db")
+
+
+class GeoIpConfig(BaseModel):
+    """
+    geoip 配置
+    """
+    data_path: str = Field(default="./data/GeoLite2-City.mmdb")

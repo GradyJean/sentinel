@@ -8,6 +8,7 @@ dependencies = [
     "apscheduler>=3.11.1",
     "elasticsearch>=9.2.0",
     "fastapi>=0.120.3",
+    "geoip2>=5.2.0",
     "loguru>=0.7.3",
     "pydantic>=2.12.3",
     "pyyaml>=6.0.3",
