@@ -180,8 +180,6 @@ class ElasticSearchRepository(IRepository[E]):
 index_template_dict = {
     "nginx_log_metadata": {"value": daily_nginx_metadata_template, "init": False},
     "allowed_ip_segment": {"value": allowed_ip_segment_template, "init": True},
-    "ip_record": {"value": ip_record_template, "init": True},
-    "ip_policy": {"value": ip_policy_template, "init": True},
     "task_scheduler": {"value": task_scheduler_template, "init": True},
 }
 
@@ -218,8 +216,8 @@ def __init_task_scheduler():
             task_id="log_collector",
             task_name="Nginx日志采集",
             enabled=True,
-            cron="*/30 * * * *",
-            description="Nginx日志采集 每30分钟执行一次"
+            cron="*/5 * * * *",
+            description="Nginx日志采集 每5分钟执行一次"
         ),
     ]
     data_init("task_scheduler", configs)

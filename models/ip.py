@@ -1,6 +1,5 @@
 import ipaddress
-from enum import Enum
-from typing import Optional, List, Self
+from typing import Optional, Self
 
 from pydantic import model_validator
 
@@ -34,44 +33,5 @@ class AllowedIpSegment(ElasticSearchModel):
         end = int(ipaddress.ip_address(self.end_ip))
         if start > end:
             self.start_ip, self.end_ip = self.end_ip, self.start_ip
-        self.cidr = ip_range_to_cidr(self.start_ip, self.end_ip)
-        return self
-
-
-class IpRecord(ElasticSearchModel):
-    """
-    IP 记录
-    """
-    ip: str  # IP
-    location: str  # 地理位置
-    isp: str  # 运营商
-    scene: str  # 使用场景
-    risk_tags: List[str]  # 风险标签
-
-
-class PolicyType(Enum):
-    """
-    策略类型枚举
-    """
-    BLACKLIST = "BLACKLIST"  # 黑名单
-    RATELIMIT = "RATELIMIT"  # 限速
-
-
-class IpPolicy(ElasticSearchModel):
-    """
-    IP 策略
-    """
-    policy_type: PolicyType  # 策略类型
-    start_ip: Optional[str] = None  # 起始 IP
-    end_ip: Optional[str] = None  # 结束 IP
-    cidr: Optional[str] = None  # CIDR 形式
-    reason: str  # 原因
-    manual: bool  # 是否手动添加
-    rate_limit: Optional[int] = None  # 限速
-    created_at: Optional[str] = None  # 创建时间
-    expire_at: Optional[str] = None  # 过期时间
-
-    @model_validator(mode="after")
-    def auto_fix(self) -> Self:
         self.cidr = ip_range_to_cidr(self.start_ip, self.end_ip)
         return self
