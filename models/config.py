@@ -51,7 +51,7 @@ class ElasticsearchConfig(BaseModel):
     Elasticsearch 配置
     """
     url: str = Field(default="http://127.0.0.1:9200")
-    username: str = Field(default="elastic")
+    username: str = Field(None)
     password: str = Field(None)
 
 

@@ -95,17 +95,6 @@ log_metadata_batch_template: Dict = {
             "batch_id": {
                 "type": "keyword"
             },
-            "index_name": {
-                "type": "keyword"
-            },
-            "start_time": {
-                "type": "date",
-                "format": "strict_date_optional_time||epoch_millis"
-            },
-            "end_time": {
-                "type": "date",
-                "format": "strict_date_optional_time||epoch_millis"
-            },
             "status": {
                 "type": "keyword"
             },
@@ -119,8 +108,7 @@ log_metadata_batch_template: Dict = {
     "start_ip": "202.195.48.0", #起始ip
     "end_ip": "202.195.63.255", #结束ip
     "cidr": "202.195.48.0/20",  #CIDR ip段
-    "tags": ["university"]      #标签
-    
+  
     详情请参考: models.ip.AllowedIpSegment
     
 """

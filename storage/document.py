@@ -10,9 +10,11 @@ from models.scheduler import TaskScheduler
 from models.storage.document import ElasticSearchModel
 from storage.repository import IRepository
 
+http_auth = None
+if settings.elasticsearch.username and settings.elasticsearch.password:
+    http_auth = (settings.elasticsearch.username, settings.elasticsearch.password)
 es_client: Elasticsearch = Elasticsearch(settings.elasticsearch.url,
-                                         http_auth=(settings.elasticsearch.username,
-                                                    settings.elasticsearch.password))
+                                         http_auth=http_auth)
 
 E = TypeVar("E", bound=ElasticSearchModel)
 

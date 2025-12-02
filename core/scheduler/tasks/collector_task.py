@@ -1,4 +1,3 @@
-import datetime
 from typing import List
 
 from loguru import logger
@@ -6,7 +5,7 @@ from loguru import logger
 from config import settings
 from core.collector.log_collector import Collector
 from core.scheduler.task_runner import TaskRunner
-from models.log import LogMetaData
+from models.log import LogMetaData, LogMetaDataBatch, BatchStatus, CollectEvent, CollectEventType
 from service.log_metadata_service import LogMetaDataService, LogMetaDataBatchService
 from service.offset_service import OffsetsService
 
@@ -16,13 +15,15 @@ class LogCollectorTask(TaskRunner):
     日志采集任务
     """
     task_id: str = "log_collector"
+    current_file_path: str = settings.nginx.get_log_path()
 
     def __init__(self):
         self.offset_service = OffsetsService()
         self.log_metadata_service = LogMetaDataService()
         self.log_metadata_batch_service = LogMetaDataBatchService()
         self.collector = Collector(
-            call_back=self.metadata_callback,
+            data_callback=self.log_metadata_callback,
+            event_callback=self.event_listener
         )
 
     async def run(self):
@@ -32,38 +33,59 @@ class LogCollectorTask(TaskRunner):
             count =1 的时候offset 为0 表示从文件头开始
             count 字段 由daily_task 任务更新
         """
-        now = datetime.datetime.now()
         file_path = settings.nginx.get_log_path()
-
-        # 创建索引(如果不存在)
-        index_name = f"log_metadata_{now.strftime('%Y_%m_%d')}"
-        template = self.log_metadata_service.get_index_template("nginx_log_metadata")
-        self.log_metadata_service.create_index(index_name, template)
-
         # 获取文件偏移量配置
         offset_config = self.offset_service.get()
         offset = offset_config.offset
-        # count ==0 表示未切换文件 用于收尾昨天日志
-        if offset_config.count == 0:
-            file_path = offset_config.file_path
-            self.log_metadata_service.index = offset_config.index_name
-        if offset_config.count == 1:  # count > 1 表示已经切换文件
-            offset = 0
-            self.log_metadata_service.index = index_name
-
+        # 文件路径改变
+        # 每天只发生一次
+        # 用来采集昨天尾部
+        # 下一次调度就切换文件了 偏移量需要归0
+        if file_path != self.current_file_path:
+            logger.info(f"file path changed: {file_path}")
+            file_path = self.current_file_path
+            self.offset_service.save_offset(0)
         # 文件采集并返回偏移量
-        offset = self.collector.start(file_path=file_path, offset=offset)
-        # 保存文件偏移量
-        offset_config.file_path = file_path
-        offset_config.offset = offset
-        offset_config.count += 1
-        self.offset_service.update(offset_config)
+        self.collector.start(file_path=file_path, offset=offset)
 
-    def metadata_callback(self, metadata_list: List[LogMetaData], file_path: str, offset: int) -> bool:
+    def log_metadata_callback(self, metadata_list: List[LogMetaData], offset: int) -> bool:
+        """
+        日志数据回调
+        :param metadata_list:
+        :param offset:
+        :return:
+        """
+        if not metadata_list:
+            return True
         save_status = self.log_metadata_service.batch_insert(metadata_list)
         if save_status:
-            # 随时保存文件偏移量 防止程序中断丢失数据
-            self.offset_service.update_offset(file_path=file_path, offset=offset)
-            logger.info(f"log metadata save success: {len(metadata_list)}")
-            return True
+            return self.offset_service.save_offset(offset)
         return False
+
+    def event_listener(self, event: CollectEvent):
+        match event.event_type:
+            case CollectEventType.DATE_CHANGED:
+                # 日期改变事件
+                # 创建索引(如果不存在)
+                index_stuff = event.data.current
+                index_name = f"log_metadata_{index_stuff}"
+                template = self.log_metadata_service.get_index_template("nginx_log_metadata")
+                self.log_metadata_service.create_index(index_name, template)
+            case CollectEventType.BATCH_CHANGED:
+                # 批次改变新增或修改批次
+                log_batches: List[LogMetaDataBatch] = []
+                last_batch_id = event.data.last
+                current_batch_id = event.data.current
+                if last_batch_id:
+                    log_batches.append(LogMetaDataBatch(
+                        id=last_batch_id,
+                        batch_id=last_batch_id,
+                        status=BatchStatus.COLLECTED
+                    ))
+                if current_batch_id:
+                    log_batches.append(LogMetaDataBatch(
+                        id=current_batch_id,
+                        batch_id=current_batch_id,
+                        status=BatchStatus.COLLECTING
+                    ))
+                self.log_metadata_batch_service.batch_merge(log_batches)

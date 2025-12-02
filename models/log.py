@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Optional, Self
+from typing import Optional, Self, Any
 
-from pydantic import model_validator
+from pydantic import model_validator, BaseModel
 from sqlalchemy import func
 from sqlmodel import Field
 from enum import Enum
@@ -14,11 +14,8 @@ class OffsetConfig(DatabaseModel, table=True):
     日志采集任务配置
     """
     __tablename__ = "offset_config"
-    file_path: str = Field(..., description="日志文件路径", unique=True)
-    index_name: str = Field(..., description="索引名称")
     offset: int = Field(0, description="日志文件偏移量")
     update_time: datetime = Field(default=func.now(), description="更新时间")
-    count: int = Field(default=0, description="计数")
 
 
 class LogMetaData(ElasticSearchModel):
@@ -93,25 +90,47 @@ class LogMetaData(ElasticSearchModel):
             second=0,
             microsecond=0
         )
-        return rounded_datetime.strftime("%Y%m%d%H%M")
+        return rounded_datetime.strftime("%Y_%m_%d%H%M")
+
+
+class CollectEventType(Enum):
+    """
+    日志采集事件类型
+    """
+    DATE_CHANGED = "DATE_CHANGED"  # 日期改变
+    BATCH_CHANGED = "BATCH_CHANGED"  # 批次改变
+
+
+class CollectEventData(BaseModel):
+    """
+    日志采集事件数据
+    """
+    last: Optional[Any]  # 上一次数据
+    current: Optional[Any]  # 当前数据
+
+
+class CollectEvent(BaseModel):
+    """
+    日志采集事件
+    """
+    event_type: CollectEventType
+    data: CollectEventData
 
 
 class BatchStatus(Enum):
     """
     批次状态
     """
-    PENDING = "PENDING"  # 等待处理
+    COLLECTING = "COLLECTING"  # 正在采集
+    COLLECTED = "COLLECTED"  # 已采集
     PROCESSING = "PROCESSING"  # 处理中
     COMPLETED = "COMPLETED"  # 处理完成
     FAILED = "FAILED"  # 处理失败
 
 
-class LogMetadataBatch(ElasticSearchModel):
+class LogMetaDataBatch(ElasticSearchModel):
     """
     日志批次信息
     """
     batch_id: str  # 批次ID
-    index_name: str  # 索引名称
-    start_time: datetime  # 批次开始时间
-    end_time: datetime  # 批次结束时间
     status: BatchStatus  # 批次状态
