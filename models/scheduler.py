@@ -6,12 +6,12 @@ from models.storage.document import ElasticSearchModel
 
 
 class TaskStatus(Enum):
-    PENDING = "pending"
-    RUNNING = "running"
-    FAILED = "failed"
-    SUCCESS = "success"
-    SKIPPED = "skipped"
-    CANCELED = "canceled"
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    FAILED = "FAILED"
+    SUCCESS = "SUCCESS"
+    SKIPPED = "SKIPPED"
+    CANCELED = "CANCELED"
 
 
 class TaskScheduler(ElasticSearchModel):

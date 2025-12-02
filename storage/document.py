@@ -227,8 +227,8 @@ def __init_task_scheduler():
             task_id="daily_task",
             task_name="每日定时任务",
             enabled=True,
-            cron="59 23 * * *",
-            description="每日定时任务,用于更新系统日志偏移量等信息,请勿修改"
+            cron="30 0 * * *",
+            description="每日定时任务,用于做一些日常任务"
         ),
     ]
     data_init("task_scheduler", configs)
