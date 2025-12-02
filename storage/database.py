@@ -114,9 +114,6 @@ def init_offset_config():
         if record_count == 0:
             session.add(OffsetConfig(
                 id="log_collect",
-                file_path=settings.nginx.get_log_path(),
-                index_name=f"log_metadata_{datetime.datetime.now().strftime('%Y_%m_%d')}",
                 offset=0,
-                count=2
             ))
             session.commit()
