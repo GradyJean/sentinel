@@ -15,7 +15,7 @@ class LogCollectorTask(TaskRunner):
     日志采集任务
     """
     task_id: str = "log_collector"
-    current_file_path: str = r"D:\homePage\log\las.ac.cn_access_2025-12-02.log"
+    current_file_path: str = settings.nginx.get_log_path()
 
     def __init__(self):
         self.offset_service = OffsetsService()
