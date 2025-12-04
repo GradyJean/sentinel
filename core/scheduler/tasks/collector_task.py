@@ -42,12 +42,13 @@ class LogCollectorTask(TaskRunner):
         # 用来采集昨天尾部
         # 下一次调度就切换文件了 偏移量需要归0
         if file_path != self.current_file_path:
-            logger.info(f"file path changed: {file_path}")
+            logger.info(f"file path change to: {file_path}")
             file_path = self.current_file_path
             self.offset_service.save_offset(0)
             # 更新当前文件路径
             self.current_file_path = settings.nginx.get_log_path()
         # 文件采集并返回偏移量
+        logger.info(f"current collecting file path: {file_path}:[{offset}]:[{self.log_metadata_service.index}]")
         self.collector.start(file_path=file_path, offset=offset)
 
     def log_metadata_callback(self, metadata_list: List[LogMetaData], offset: int) -> bool:
