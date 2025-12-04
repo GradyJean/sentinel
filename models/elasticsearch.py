@@ -329,7 +329,7 @@ access_ip_aggregation_template = {
                     "sum": {"type": "float"},
                     "sum_of_squares": {"type": "float"},
                     "variance": {"type": "float"},
-                    "variance_population": {"type": "type"},
+                    "variance_population": {"type": "float"},
                     "variance_sampling": {"type": "float"},
                     "std_deviation": {"type": "float"},
                     "std_deviation_population": {"type": "float"},

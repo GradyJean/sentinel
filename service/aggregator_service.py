@@ -100,7 +100,3 @@ class AccessIpAggregationService(ElasticSearchRepository[AccessIpAggregation]):
         }
         res = self.get_client().search(index=index_name, body=query)
         print(res)
-
-
-agg = AccessIpAggregationService()
-agg.query_access_ip_aggregation("2025_12_041105")
