@@ -71,9 +71,7 @@ class LogCollectorTask(TaskRunner):
                 # 日期改变事件
                 # 创建索引(如果不存在)
                 index_stuff = event.data.current
-                index_name = f"log_metadata_{index_stuff}"
-                template = self.log_metadata_service.get_index_template("nginx_log_metadata")
-                self.log_metadata_service.create_index(index_name, template)
+                self.log_metadata_service.create_daily_index(index_stuff)
             case CollectEventType.BATCH_CHANGED:
                 # 批次改变新增或修改批次
                 log_batches: List[LogMetaDataBatch] = []

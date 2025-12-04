@@ -210,3 +210,142 @@ task_scheduler_template = {
         }
     }
 }
+
+access_ip_aggregation_template = {
+    "settings": {
+        "number_of_shards": 5,
+        "number_of_replicas": 0
+    },
+    "mappings": {
+        "dynamic": "strict",
+        "properties": {
+
+            "ip": {"type": "ip"},
+
+            "batch_id": {"type": "keyword"},
+
+            "count": {"type": "integer"},
+
+            "path_categories": {
+                "type": "nested",
+                "properties": {
+                    "key": {"type": "keyword"},
+                    "value": {"type": "integer"}
+                }
+            },
+
+            "path": {
+                "type": "nested",
+                "properties": {
+                    "key": {"type": "keyword"},
+                    "value": {"type": "integer"}
+                }
+            },
+
+            "http_user_agent": {
+                "type": "nested",
+                "properties": {
+                    "key": {"type": "keyword"},
+                    "value": {"type": "integer"}
+                }
+            },
+
+            "referer_categories": {
+                "type": "nested",
+                "properties": {
+                    "key": {"type": "keyword"},
+                    "value": {"type": "integer"}
+                }
+            },
+
+            "status": {
+                "type": "nested",
+                "properties": {
+                    "key": {"type": "keyword"},
+                    "value": {"type": "integer"}
+                }
+            },
+
+            "request_length": {
+                "properties": {
+                    "count": {"type": "integer"},
+                    "min": {"type": "float"},
+                    "max": {"type": "float"},
+                    "avg": {"type": "float"},
+                    "sum": {"type": "float"},
+                    "sum_of_squares": {"type": "float"},
+                    "variance": {"type": "float"},
+                    "variance_population": {"type": "float"},
+                    "variance_sampling": {"type": "float"},
+                    "std_deviation": {"type": "float"},
+                    "std_deviation_population": {"type": "float"},
+                    "std_deviation_sampling": {"type": "float"},
+                    "std_deviation_bounds": {
+                        "properties": {
+                            "upper": {"type": "float"},
+                            "lower": {"type": "float"},
+                            "upper_population": {"type": "float"},
+                            "lower_population": {"type": "float"},
+                            "upper_sampling": {"type": "float"},
+                            "lower_sampling": {"type": "float"}
+                        }
+                    }
+                }
+            },
+
+            "body_bytes_sent": {
+                "properties": {
+                    "count": {"type": "integer"},
+                    "min": {"type": "float"},
+                    "max": {"type": "float"},
+                    "avg": {"type": "float"},
+                    "sum": {"type": "float"},
+                    "sum_of_squares": {"type": "float"},
+                    "variance": {"type": "float"},
+                    "variance_population": {"type": "float"},
+                    "variance_sampling": {"type": "float"},
+                    "std_deviation": {"type": "float"},
+                    "std_deviation_population": {"type": "float"},
+                    "std_deviation_sampling": {"type": "float"},
+                    "std_deviation_bounds": {
+                        "properties": {
+                            "upper": {"type": "float"},
+                            "lower": {"type": "float"},
+                            "upper_population": {"type": "float"},
+                            "lower_population": {"type": "float"},
+                            "upper_sampling": {"type": "float"},
+                            "lower_sampling": {"type": "float"}
+                        }
+                    }
+                }
+            },
+
+            "request_time": {
+                "properties": {
+                    "count": {"type": "integer"},
+                    "min": {"type": "float"},
+                    "max": {"type": "float"},
+                    "avg": {"type": "float"},
+                    "sum": {"type": "float"},
+                    "sum_of_squares": {"type": "float"},
+                    "variance": {"type": "float"},
+                    "variance_population": {"type": "type"},
+                    "variance_sampling": {"type": "float"},
+                    "std_deviation": {"type": "float"},
+                    "std_deviation_population": {"type": "float"},
+                    "std_deviation_sampling": {"type": "float"},
+                    "std_deviation_bounds": {
+                        "properties": {
+                            "upper": {"type": "float"},
+                            "lower": {"type": "float"},
+                            "upper_population": {"type": "float"},
+                            "lower_population": {"type": "float"},
+                            "upper_sampling": {"type": "float"},
+                            "lower_sampling": {"type": "float"}
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

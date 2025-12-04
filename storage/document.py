@@ -184,6 +184,7 @@ index_template_dict = {
     "allowed_ip_segment": {"value": allowed_ip_segment_template, "init": True},
     "log_metadata_batch": {"value": log_metadata_batch_template, "init": True},
     "task_scheduler": {"value": task_scheduler_template, "init": True},
+    "access_ip_aggregation": {"value": access_ip_aggregation_template, "init": True},
 }
 
 
@@ -229,6 +230,14 @@ def __init_task_scheduler():
             enabled=True,
             cron="30 0 * * *",
             description="每日定时任务,用于做一些日常任务"
+        ),
+        TaskScheduler(
+            id="log_aggregator",
+            task_id="log_aggregator",
+            task_name="聚合日志任务",
+            enabled=True,
+            cron="*/5 * * * *",
+            description="Nginx 元数据聚合任务 每5分钟执行一次"
         ),
     ]
     data_init("task_scheduler", configs)

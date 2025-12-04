@@ -11,6 +11,7 @@ class LogMetaDataService(ElasticSearchRepository[LogMetaData]):
     日志服务
     """
     PREFIX = "log_metadata_"
+    TEMPLATE_NAME = "nginx_log_metadata"
 
     def __init__(self):
         super().__init__("nginx_log_metadata", LogMetaData)
@@ -28,6 +29,11 @@ class LogMetaDataService(ElasticSearchRepository[LogMetaData]):
             except Exception as e:
                 logger.error(f"Error deleting index: {index}: {e}")
                 continue
+
+    def create_daily_index(self, index_stuff: str):
+        index_name = f"{self.PREFIX}{index_stuff}"
+        template = self.get_index_template("nginx_log_metadata")
+        self.create_index(index_name, template)
 
 
 class LogMetaDataBatchService(ElasticSearchRepository[LogMetaDataBatch]):
