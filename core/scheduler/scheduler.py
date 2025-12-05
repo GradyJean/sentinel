@@ -3,6 +3,7 @@ import pkgutil
 from datetime import datetime
 from typing import Dict, List
 
+from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from loguru import logger
@@ -15,7 +16,15 @@ from service import task_scheduler_service
 
 class SchedulerManager:
     def __init__(self):
-        self.scheduler = AsyncIOScheduler()
+        self.scheduler = AsyncIOScheduler(
+            executors={
+                "default": ThreadPoolExecutor(20),
+            },
+            job_defaults={
+                "max_instances": 1,  # 同类型job运行一次
+                "coalesce": True,  # 错过的调度不补偿
+            }
+        )
         self.task_runners: List[TaskRunner] = self.__load_task_runners()
         self.reload_tasks()
 
