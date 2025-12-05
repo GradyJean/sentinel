@@ -13,5 +13,5 @@ class TaskRunner(ABC):
             raise TypeError(f"[{cls.__name__}]{cls.__name__} The task_id attribute must be created and cannot be empty")
 
     @abstractmethod
-    async def run(self):
+    def run(self):
         pass

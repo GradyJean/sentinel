@@ -9,5 +9,5 @@ class DailyTask(TaskRunner):
     task_id = "daily_task"
     log_metadata_service = LogMetaDataService()
 
-    async def run(self):
+    def run(self):
         self.log_metadata_service.cleanup_indices(keep_days=7)

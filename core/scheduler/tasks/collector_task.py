@@ -27,7 +27,7 @@ class LogCollectorTask(TaskRunner):
             event_callback=self.event_listener
         )
 
-    async def run(self):
+    def run(self):
         """
             初始计数 从1开始 1表示从今天的文件开始
             0表示昨天日志 用于收尾昨天日志

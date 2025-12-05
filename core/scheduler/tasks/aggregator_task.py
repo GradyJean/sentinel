@@ -9,7 +9,7 @@ class LogAggregatorTask(TaskRunner):
     log_metadata_batch_service = LogMetaDataBatchService()
     access_ip_aggregation_service = AccessIpAggregationService()
 
-    async def run(self):
+    def run(self):
         query = {
             "query": {
                 "term": {

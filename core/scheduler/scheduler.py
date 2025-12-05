@@ -99,7 +99,7 @@ class SchedulerManager:
                 logger.info(f"Task [{task_id}] created cron: {config.cron}")
 
     @staticmethod
-    async def __task_runner_wrapper(task_runner: TaskRunner):
+    def __task_runner_wrapper(task_runner: TaskRunner):
         """
            通用包装器：执行前后自动更新状态、捕获异常
         """
@@ -123,7 +123,7 @@ class SchedulerManager:
         task_scheduler_service.merge(config)
         try:
             # 运行任务
-            await task_runner.run()
+            task_runner.run()
             config.status = TaskStatus.SUCCESS
             logger.info(f"Task [{task_runner.task_id}] completed")
         except Exception as e:
