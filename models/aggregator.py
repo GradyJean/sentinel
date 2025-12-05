@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -35,8 +35,19 @@ class KeyValue(BaseModel):
     value: int
 
 
+class IpEnrich(BaseModel):
+    allowed: bool = False
+    org_name: str = ""
+    city_name: str = ""
+    country_name: str = ""
+    country_code: str = ""
+    continent_name: str = ""
+    continent_code: str = ""
+
+
 class AccessIpAggregation(ElasticSearchModel):
     ip: str
+    ip_enrich: Optional[IpEnrich]
     count: int
     path_categories: List[KeyValue]
     path: List[KeyValue]

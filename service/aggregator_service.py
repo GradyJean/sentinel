@@ -1,6 +1,7 @@
 from typing import List
 
-from models.aggregator import AccessIpAggregation, KeyValue, ExtendedStats, StdDeviationBound
+from models.aggregator import AccessIpAggregation, KeyValue, ExtendedStats, StdDeviationBound, IpEnrich
+from service.ip_service import AllowedIpSegmentService, GeoIpService
 from storage.document import ElasticSearchRepository
 
 
@@ -8,13 +9,22 @@ class AccessIpAggregationService(ElasticSearchRepository[AccessIpAggregation]):
     """
     访问IP聚合服务
     """
-    PREFIX = "log_metadata_"
+    allowed_ip_segment_service = AllowedIpSegmentService()
+    geoip_service = GeoIpService()
+    LOG_META_DATA_PREFIX = "log_metadata_"
+    PREFIX = "access_ip_aggregation_"
+    TEMPLATE_NAME = "access_ip_aggregation"
 
     def __init__(self):
         super().__init__("access_ip_aggregation", AccessIpAggregation)
 
+    def create_daily_index(self, index_stuff: str):
+        index_name = f"{self.PREFIX}{index_stuff}"
+        template = self.get_index_template(index_name=self.TEMPLATE_NAME)
+        self.create_index(index_name, template)
+
     def query_access_ip_aggregation(self, batch_id: str) -> List[AccessIpAggregation]:
-        index_name = f"{self.PREFIX}{batch_id[:10]}"
+        index_name = f"{self.LOG_META_DATA_PREFIX}{batch_id[:10]}"
         query = {
             "from": 0,
             "size": 0,
@@ -62,7 +72,43 @@ class AccessIpAggregationService(ElasticSearchRepository[AccessIpAggregation]):
             after_key = res["aggregations"]["ip"].get("after_key")
             if not after_key:
                 break
-        return [self.parse_bucket_to_model(bucket, batch_id) for bucket in buckets]
+        ips = [bucket["key"]["remote_addr"] for bucket in buckets]
+        allowed_ip_segments = self.allowed_ip_segment_service.query_ips(ips)
+        geoip_cities = self.geoip_service.query_cities(ips)
+        result: List[AccessIpAggregation] = []
+        for bucket in buckets:
+            allowed: bool = False
+            org_name: str = ""
+            city_name: str = ""
+            country_name: str = ""
+            country_code: str = ""
+            continent_name: str = ""
+            continent_code: str = ""
+            access_ip_agg = self.parse_bucket_to_model(bucket, batch_id)
+            ip = access_ip_agg.ip
+            # 获取 allowed
+            allowed_ips = allowed_ip_segments.get(ip)
+            if allowed_ips:
+                org_name = allowed_ips[0].org_name
+                allowed = allowed_ips[0].is_internal
+            ego_city = geoip_cities.get(ip)
+            if ego_city:
+                city_name = ego_city.city.names.get("zh-CN", "") if ego_city.city.names else ""
+                country_name = ego_city.country.names.get("zh-CN", "") if ego_city.country.names else ""
+                country_code = getattr(ego_city.country, 'iso_code', "")
+                continent_name = ego_city.continent.names.get("zh-CN", "") if ego_city.continent.names else ""
+                continent_code = getattr(ego_city.continent, 'code', "")
+            access_ip_agg.ip_enrich = IpEnrich(
+                allowed=allowed,
+                org_name=org_name,
+                city_name=city_name,
+                country_name=country_name,
+                country_code=country_code,
+                continent_name=continent_name,
+                continent_code=continent_code
+            )
+            result.append(access_ip_agg)
+        return result
 
     @staticmethod
     def parse_terms_buckets(buckets):
@@ -115,6 +161,7 @@ class AccessIpAggregationService(ElasticSearchRepository[AccessIpAggregation]):
         ]
         return AccessIpAggregation(
             ip=bucket["key"]["remote_addr"],
+            ip_enrich=None,
             count=bucket["doc_count"],
             status=self.parse_terms_buckets(bucket["status"]["buckets"]),
             path=self.parse_terms_buckets(bucket["path"]["buckets"]),

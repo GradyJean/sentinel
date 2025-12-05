@@ -32,7 +32,7 @@ class LogMetaDataService(ElasticSearchRepository[LogMetaData]):
 
     def create_daily_index(self, index_stuff: str):
         index_name = f"{self.PREFIX}{index_stuff}"
-        template = self.get_index_template("nginx_log_metadata")
+        template = self.get_index_template(index_name=self.TEMPLATE_NAME)
         self.create_index(index_name, template)
 
 

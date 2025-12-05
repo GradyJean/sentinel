@@ -210,7 +210,7 @@ index_template_dict = {
     "allowed_ip_segment": {"value": allowed_ip_segment_template, "init": True},
     "log_metadata_batch": {"value": log_metadata_batch_template, "init": True},
     "task_scheduler": {"value": task_scheduler_template, "init": True},
-    "access_ip_aggregation": {"value": access_ip_aggregation_template, "init": True},
+    "access_ip_aggregation": {"value": access_ip_aggregation_template, "init": False},
 }
 
 
