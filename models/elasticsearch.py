@@ -355,6 +355,12 @@ access_ip_aggregation_template = {
                         }
                     }
                 }
+            },
+            "behavior_vector": {
+                "type": "dense_vector",
+                "dims": 35,
+                "index": True,
+                "similarity": "cosine"
             }
         }
     }

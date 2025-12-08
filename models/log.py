@@ -108,7 +108,7 @@ class LogMetaData(ElasticSearchModel):
             second=0,
             microsecond=0
         )
-        return rounded_datetime.strftime("%Y_%m_%d%H%M")
+        return rounded_datetime.strftime("%Y_%m_%d_%H:%M")
 
 
 class CollectEventType(Enum):
