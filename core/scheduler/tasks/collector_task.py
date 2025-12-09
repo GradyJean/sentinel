@@ -40,9 +40,11 @@ class LogCollectorTask(TaskRunner):
         if file_path != self.current_file_path:
             logger.info(f"file path change to: {file_path}")
             file_path = self.current_file_path
+            logger.info(f"reset file path: {file_path}")
             self.file_path_changed = True
+            logger.info(f"set file path change status:{self.file_path_changed}")
             self.current_file_path = settings.nginx.get_log_path()
-
+            logger.info(f"current file path update: {self.current_file_path}")
         logger.info(f"current collecting file path: {file_path}:[{offset}]:[{self.log_metadata_service.index}]")
         self.collector.start(file_path=file_path, offset=offset)
 
@@ -56,11 +58,14 @@ class LogCollectorTask(TaskRunner):
         if not metadata_list:
             return True
         save_status = self.log_metadata_service.batch_insert(metadata_list)
+        logger.info(f"save log meta data: {len(metadata_list)} status: {save_status} current offset:{offset}")
         if self.file_path_changed:
             # 文件改变时 重置偏移量
             offset = 0
             self.file_path_changed = False
+            logger.info(f"file path change, reset offset, set file path change status:{self.file_path_changed}")
         if save_status:
+            logger.info(f"offset update: {offset}")
             return self.offset_service.save_offset(offset)
         return False
 
