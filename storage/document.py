@@ -133,7 +133,10 @@ class ElasticSearchRepository(IRepository[E]):
                 es_client,
                 actions,
                 chunk_size=1000,
-                request_timeout=60
+                request_timeout=60,
+                raise_on_error=True,
+                raise_on_exception=True,
+                error_trace=True
             )
             if error:
                 logger.error(error)

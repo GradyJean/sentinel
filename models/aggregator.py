@@ -58,4 +58,4 @@ class AccessIpAggregation(ElasticSearchModel):
     referer_categories: List[KeyValue]
     status: List[KeyValue]
     batch_id: str
-    behavior_vector: Optional[List[float]] = None
+    behavior_vector: Optional[List[float]]
