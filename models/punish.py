@@ -1,32 +1,10 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List
+from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from models.storage.document import ElasticSearchModel
-
-
-class ScoreType(Enum):
-    """
-    评分类型
-    """
-    DEDUCTIBLE = "DEDUCTIBLE"  # 可扣除规则
-    PERMANENT = "PERMANENT"  # 不可扣除规则
-
-
-class ScoreRule(ElasticSearchModel):
-    """
-    评分规则
-    """
-    rule_name: str  # 规则名称
-    score_type: ScoreType  # 评分类型
-    condition: str  # 条件
-    formula: str  # 公式
-    description: str  # 描述
-    created_at: Optional[datetime] = None  # 创建时间
-    updated_at: Optional[datetime] = None  # 更新时间
-    enabled: bool = True  # 是否启用
 
 
 class PunishType(Enum):
@@ -57,26 +35,4 @@ class PunishRecord(ElasticSearchModel):
     ip: str  # IP
     punish_level: PunishLevel  # 处罚等级
     description: str  # 描述
-    created_at: Optional[datetime] = None  # 创建时间
-    expire_at: Optional[datetime] = None  # 过期时间
-    enabled: bool = True  # 是否启用
-
-
-class ScoreDetail(BaseModel):
-    """
-    评分详情
-    """
-    score_rule: ScoreRule
-    score: float
-    description: str
-    created_at: Optional[datetime] = None
-
-
-class ScoreRecord(ElasticSearchModel):
-    """
-    评分记录
-    """
-    ip: str  # IP
-    deductible_score: float = 0  # 可扣除分数
-    permanent_score: float = 0  # 不可扣除分数
-    score_details: List[ScoreDetail] = Field(default_factory=list)  # 评分详情
+    last_update: Optional[datetime] = Field(default=datetime.now())  # 最后更新时间
