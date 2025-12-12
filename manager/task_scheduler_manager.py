@@ -2,7 +2,7 @@ from models.scheduler import TaskScheduler
 from storage.document import ElasticSearchRepository
 
 
-class TaskSchedulerService(ElasticSearchRepository[TaskScheduler]):
+class TaskSchedulerManager(ElasticSearchRepository[TaskScheduler]):
     """
     任务调度服务
     """

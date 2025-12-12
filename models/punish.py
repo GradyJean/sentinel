@@ -33,6 +33,6 @@ class PunishRecord(ElasticSearchModel):
     处罚记录
     """
     ip: str  # IP
-    punish_level: PunishLevel  # 处罚等级
+    punish_level_name: str  # 处罚等级
     description: str  # 描述
     last_update: Optional[datetime] = Field(default=datetime.now())  # 最后更新时间

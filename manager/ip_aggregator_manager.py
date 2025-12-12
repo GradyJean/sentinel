@@ -5,16 +5,16 @@ from typing import List, Union
 from loguru import logger
 
 from models.aggregator import AccessIpAggregation, KeyValue, ExtendedStats, StdDeviationBound, IpEnrich
-from service.ip_service import AllowedIpSegmentService, GeoIpService
+from manager.ip_resource_manager import AllowedIpSegmentManager, GeoIpManager
 from storage.document import ElasticSearchRepository
 
 
-class AccessIpAggregationService(ElasticSearchRepository[AccessIpAggregation]):
+class AccessIpAggregationManager(ElasticSearchRepository[AccessIpAggregation]):
     """
     访问IP聚合服务
     """
-    allowed_ip_segment_service = AllowedIpSegmentService()
-    geoip_service = GeoIpService()
+    allowed_ip_segment_manager = AllowedIpSegmentManager()
+    geoip_manager = GeoIpManager()
     LOG_META_DATA_PREFIX = "log_metadata_"
     PREFIX = "access_ip_aggregation_"
     TEMPLATE_NAME = "access_ip_aggregation"
@@ -77,8 +77,8 @@ class AccessIpAggregationService(ElasticSearchRepository[AccessIpAggregation]):
             if not after_key:
                 break
         ips = [bucket["key"]["remote_addr"] for bucket in buckets]
-        allowed_ip_segments = self.allowed_ip_segment_service.query_ips(ips)
-        geoip_cities = self.geoip_service.query_cities(ips)
+        allowed_ip_segments = self.allowed_ip_segment_manager.query_ips(ips)
+        geoip_cities = self.geoip_manager.query_cities(ips)
         result: List[AccessIpAggregation] = []
         for bucket in buckets:
             allowed: bool = False

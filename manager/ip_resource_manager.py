@@ -10,7 +10,7 @@ from models.ip import AllowedIpSegment
 from storage.document import ElasticSearchRepository
 
 
-class AllowedIpSegmentService(ElasticSearchRepository[AllowedIpSegment]):
+class AllowedIpSegmentManager(ElasticSearchRepository[AllowedIpSegment]):
     """
     允许的 IP 段服务
     """
@@ -79,7 +79,7 @@ class AllowedIpSegmentService(ElasticSearchRepository[AllowedIpSegment]):
         return output
 
 
-class GeoIpService:
+class GeoIpManager:
     """
     GeoIP服务
     """

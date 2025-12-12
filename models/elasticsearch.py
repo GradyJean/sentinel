@@ -365,3 +365,158 @@ access_ip_aggregation_template = {
         }
     }
 }
+score_rule_template = {
+    "settings": {
+        "number_of_shards": 5,
+        "number_of_replicas": 0
+    },
+    "mappings": {
+        "dynamic": "strict",
+        "properties": {
+            "rule_name": {
+                "type": "keyword"
+            },
+            "score_type": {
+                "type": "keyword"
+            },
+            "condition": {
+                "type": "text",
+                "index": False
+            },
+            "formula": {
+                "type": "text",
+                "index": False
+            },
+            "description": {
+                "type": "text"
+            },
+            "enabled": {
+                "type": "boolean"
+            },
+            "created_at": {
+                "type": "date"
+            },
+            "updated_at": {
+                "type": "date"
+            }
+        }
+    }
+}
+score_record_template = {
+    "settings": {
+        "number_of_shards": 5,
+        "number_of_replicas": 0
+    },
+    "mappings": {
+        "dynamic": "strict",
+        "properties": {
+            "ip": {
+                "type": "ip"
+            },
+            "score_fixed": {
+                "type": "float"
+            },
+            "score_dynamic": {
+                "type": "float"
+            },
+            "score_feature": {
+                "type": "float"
+            },
+            "batch_id": {
+                "type": "keyword"
+            },
+            "score_details": {
+                "type": "nested",
+                "properties": {
+                    "score_rule_name": {
+                        "type": "keyword"
+                    },
+                    "score": {
+                        "type": "float"
+                    },
+                    "description": {
+                        "type": "text"
+                    }
+                }
+            }
+        }
+    }
+}
+score_aggregate_template = {
+    "settings": {
+        "number_of_shards": 5,
+        "number_of_replicas": 0
+    },
+    "mappings": {
+        "dynamic": "strict",
+        "properties": {
+            "ip": {
+                "type": "ip"
+            },
+            "score_fixed": {
+                "type": "float"
+            },
+            "score_dynamic": {
+                "type": "float"
+            },
+            "score_feature": {
+                "type": "float"
+            },
+            "last_update": {
+                "type": "date"
+            }
+        }
+    }
+}
+punish_level_template = {
+    "settings": {
+        "number_of_shards": 5,
+        "number_of_replicas": 0
+    },
+    "mappings": {
+        "dynamic": "strict",
+        "properties": {
+            "name": {
+                "type": "keyword"
+            },
+            "level": {
+                "type": "integer"
+            },
+            "level_type": {
+                "type": "keyword"
+            },
+            "score": {
+                "type": "float"
+            },
+            "description": {
+                "type": "text"
+            },
+            "created_at": {
+                "type": "date"
+            }
+        }
+    }
+}
+punish_record_template = {
+    "settings": {
+        "number_of_shards": 5,
+        "number_of_replicas": 0
+    },
+    "mappings": {
+        "dynamic": "strict",
+        "properties": {
+            "ip": {
+                "type": "ip"
+            },
+            "punish_level_name": {
+                "type": "keyword"
+            },
+            "description": {
+                "type": "text"
+            },
+            "last_update": {
+                "type": "date"
+            }
+        }
+    }
+}

@@ -6,7 +6,7 @@ from models.log import LogMetaData, LogMetaDataBatch
 from storage.document import ElasticSearchRepository
 
 
-class LogMetaDataService(ElasticSearchRepository[LogMetaData]):
+class LogMetaDataManager(ElasticSearchRepository[LogMetaData]):
     """
     日志服务
     """
@@ -36,7 +36,7 @@ class LogMetaDataService(ElasticSearchRepository[LogMetaData]):
         self.create_index(index_name, template)
 
 
-class LogMetaDataBatchService(ElasticSearchRepository[LogMetaDataBatch]):
+class LogMetaDataBatchManager(ElasticSearchRepository[LogMetaDataBatch]):
     """
     日志服务
     """

@@ -219,6 +219,11 @@ index_template_dict = {
     "log_metadata_batch": {"value": log_metadata_batch_template, "init": True},
     "task_scheduler": {"value": task_scheduler_template, "init": True},
     "access_ip_aggregation": {"value": access_ip_aggregation_template, "init": False},
+    "score_rule": {"value": score_rule_template, "init": True},
+    "score_record": {"value": score_record_template, "init": True},
+    "score_aggregate": {"value": score_aggregate_template, "init": True},
+    "punish_level": {"value": punish_level_template, "init": True},
+    "punish_record": {"value": punish_record_template, "init": True}
 }
 
 

@@ -11,7 +11,7 @@ from loguru import logger
 from core.scheduler import tasks
 from core.scheduler.task_runner import TaskRunner
 from models.scheduler import TaskScheduler, TaskStatus
-from service import task_scheduler_service
+from manager import task_scheduler_manager
 
 
 class SchedulerManager:
@@ -41,7 +41,7 @@ class SchedulerManager:
         :return:
         """
         config: Dict[str, TaskScheduler] = {}
-        records = task_scheduler_service.get_all()
+        records = task_scheduler_manager.get_all()
         if records:
             for record in records:
                 config[record.task_id] = record
@@ -110,7 +110,7 @@ class SchedulerManager:
         """
            通用包装器：执行前后自动更新状态、捕获异常
         """
-        config: TaskScheduler = task_scheduler_service.get_by_id(task_runner.task_id)
+        config: TaskScheduler = task_scheduler_manager.get_by_id(task_runner.task_id)
         # 配置不存在 或者 禁用 跳过
         if not config or not config.enabled:
             return
@@ -127,7 +127,7 @@ class SchedulerManager:
         config.status = TaskStatus.RUNNING
         config.message = ""
         config.batch_id = batch_id
-        task_scheduler_service.merge(config)
+        task_scheduler_manager.merge(config)
         try:
             # 运行任务
             task_runner.run()
@@ -140,4 +140,4 @@ class SchedulerManager:
         finally:
             #  更新状态
             config.end_time = datetime.now()
-            task_scheduler_service.merge(config)
+            task_scheduler_manager.merge(config)

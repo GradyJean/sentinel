@@ -2,7 +2,7 @@ from models import OffsetConfig
 from storage.database import DatabaseRepository
 
 
-class OffsetsService(DatabaseRepository[OffsetConfig]):
+class OffsetsManager(DatabaseRepository[OffsetConfig]):
     """
     日志采集任务服务
     """

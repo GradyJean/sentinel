@@ -6,8 +6,8 @@ from config import settings
 from core.collector.log_collector import Collector
 from core.scheduler.task_runner import TaskRunner
 from models.log import LogMetaData, LogMetaDataBatch, BatchStatus, CollectEvent, CollectEventType
-from service.log_metadata_service import LogMetaDataService, LogMetaDataBatchService
-from service.offset_service import OffsetsService
+from manager.log_metadata_manager import LogMetaDataManager, LogMetaDataBatchManager
+from manager.offset_manager import OffsetsManager
 
 
 class LogCollectorTask(TaskRunner):
@@ -20,9 +20,9 @@ class LogCollectorTask(TaskRunner):
     _lock = Lock()  # 类级别锁
 
     def __init__(self):
-        self.offset_service = OffsetsService()
-        self.log_metadata_service = LogMetaDataService()
-        self.log_metadata_batch_service = LogMetaDataBatchService()
+        self.offset_manager = OffsetsManager()
+        self.log_metadata_manager = LogMetaDataManager()
+        self.log_metadata_batch_manager = LogMetaDataBatchManager()
         self.collector = Collector(
             data_callback=self.log_metadata_callback,
             event_callback=self.event_listener
@@ -34,7 +34,7 @@ class LogCollectorTask(TaskRunner):
 
     def _run_safe(self):
         file_path = settings.nginx.get_log_path()
-        offset_config = self.offset_service.get()
+        offset_config = self.offset_manager.get()
         offset = offset_config.offset
 
         if file_path != self.current_file_path:
@@ -45,7 +45,7 @@ class LogCollectorTask(TaskRunner):
             logger.info(f"set file path change status:{self.file_path_changed}")
             self.current_file_path = settings.nginx.get_log_path()
             logger.info(f"current file path update: {self.current_file_path}")
-        logger.info(f"current collecting file path: {file_path}:[{offset}]:[{self.log_metadata_service.index}]")
+        logger.info(f"current collecting file path: {file_path}:[{offset}]:[{self.log_metadata_manager.index}]")
         # 启动采集器
         self.collector.start(file_path=file_path, offset=offset)
         # 批次改变
@@ -53,7 +53,7 @@ class LogCollectorTask(TaskRunner):
             # 文件改变时 重置偏移量
             self.file_path_changed = False
             logger.info(f"file path change, reset offset, set file path change status:{self.file_path_changed}")
-            self.offset_service.save_offset(0)
+            self.offset_manager.save_offset(0)
     def log_metadata_callback(self, metadata_list: List[LogMetaData], offset: int) -> bool:
         """
         日志数据回调
@@ -63,10 +63,10 @@ class LogCollectorTask(TaskRunner):
         """
         if not metadata_list:
             return True
-        save_status = self.log_metadata_service.batch_insert(metadata_list)
+        save_status = self.log_metadata_manager.batch_insert(metadata_list)
         logger.info(f"save log meta data: {len(metadata_list)} status: {save_status} current offset:{offset}")
         if save_status:
-            return self.offset_service.save_offset(offset)
+            return self.offset_manager.save_offset(offset)
         return False
 
     def event_listener(self, event: CollectEvent):
@@ -75,7 +75,7 @@ class LogCollectorTask(TaskRunner):
                 # 日期改变事件
                 # 创建索引(如果不存在)
                 index_stuff = event.data.current
-                self.log_metadata_service.create_daily_index(index_stuff)
+                self.log_metadata_manager.create_daily_index(index_stuff)
             case CollectEventType.BATCH_CHANGED:
                 # 批次改变新增或修改批次
                 log_batches: List[LogMetaDataBatch] = []
@@ -93,4 +93,4 @@ class LogCollectorTask(TaskRunner):
                         batch_id=current_batch_id,
                         status=BatchStatus.COLLECTING
                     ))
-                self.log_metadata_batch_service.batch_merge(log_batches)
+                self.log_metadata_batch_manager.batch_merge(log_batches)
