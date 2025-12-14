@@ -1,9 +1,9 @@
 from core.scheduler.task_runner import TaskRunner
 
 
-class DailyTask(TaskRunner):
+class ScoreTask(TaskRunner):
     """
-    每天定时任务
+    评分定时任务
     """
     task_id = "score_task"
 

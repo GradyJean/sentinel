@@ -255,14 +255,6 @@ def __init_task_scheduler():
     """
     configs: List[TaskScheduler] = [
         TaskScheduler(
-            id="log_collector",
-            task_id="log_collector",
-            task_name="Nginx日志采集",
-            enabled=True,
-            cron="*/5 * * * *",
-            description="Nginx日志采集 每5分钟执行一次"
-        ),
-        TaskScheduler(
             id="daily_task",
             task_id="daily_task",
             task_name="每日定时任务",
@@ -271,12 +263,36 @@ def __init_task_scheduler():
             description="每日定时任务,用于做一些日常任务"
         ),
         TaskScheduler(
+            id="log_collector",
+            task_id="log_collector",
+            task_name="Nginx日志采集",
+            enabled=True,
+            cron="*/5 * * * *",
+            description="Nginx日志采集 每5分钟执行一次 0开始触发"
+        ),
+        TaskScheduler(
             id="log_aggregator",
             task_id="log_aggregator",
             task_name="聚合日志任务",
             enabled=True,
-            cron="*/5 * * * *",
-            description="Nginx 元数据聚合任务 每5分钟执行一次"
+            cron="1-59/5 * * * *",
+            description="Nginx 元数据聚合任务 每5分钟执行一次 从第一分钟开始触发 延时于采集任务"
+        ),
+        TaskScheduler(
+            id="score_task",
+            task_id="score_task",
+            task_name="ip评分任务",
+            enabled=True,
+            cron="2-59/5 * * * *",
+            description="评分任务 每5分钟执行一次 从第二分钟开始触发 延时于聚合任务"
+        ),
+        TaskScheduler(
+            id="punish_task",
+            task_id="punish_task",
+            task_name=" ip 惩处任务",
+            enabled=True,
+            cron="3-59/5 * * * *",
+            description="惩处任务 每5分钟执行一次 从第三分钟开始触发 延时于评分任务"
         ),
     ]
     data_init("task_scheduler", configs)
