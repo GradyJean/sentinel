@@ -331,12 +331,12 @@ def __score_role_init():
             updated_at=datetime.now()
         ),
         ScoreRule(
-            id="dynamic_path_length_low",
+            id="dynamic_path_size_low",
             rule_name="few_paths_accessed",
             score_type=ScoreType.DYNAMIC,
-            condition="path_length <= 2",
+            condition="path_size <= 2",
             formula="2",
-            description="路径长度小于等于2",
+            description="路径数量小于等于2",
             enabled=True,
             created_at=datetime.now(),
             updated_at=datetime.now()
@@ -345,7 +345,7 @@ def __score_role_init():
             id="dynamic_ua_count_high",
             rule_name="many_user_agents",
             score_type=ScoreType.DYNAMIC,
-            condition="http_user_agent_length >= 5",
+            condition="http_user_agent_size >= 5",
             formula="2",
             description="ua 多于5个",
             enabled=True,

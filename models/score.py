@@ -125,7 +125,7 @@ class AccessIpScoreFeatures(BaseModel):
     def from_aggregation(cls, agg: AccessIpAggregation) -> "AccessIpScoreFeatures":
         features: Dict[str, Any] = {
             "count": float(agg.count),
-            "path.length": float(len(agg.path)),
+            "path_size": float(len(agg.path)),
             "ip_enrich_allowed": agg.ip_enrich.allowed,
             "ip_enrich_org_name": agg.ip_enrich.org_name,
             "ip_enrich_city_name": agg.ip_enrich.city_name,
@@ -188,7 +188,7 @@ class AccessIpScoreFeatures(BaseModel):
         flatten_stats("request_time", agg.request_time)
         # http_user_agent
         ua_list = agg.http_user_agent
-        features["http_user_agent_length"] = float(len(ua_list))
+        features["http_user_agent_size"] = float(len(ua_list))
         for group in UA_KEYWORDS:
             features[f"http_user_agent_{group}"] = 0.0
         for ua in ua_list:
