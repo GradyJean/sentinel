@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, TypeVar, Any, Optional, Type
 
 from elasticsearch import Elasticsearch, helpers
@@ -7,6 +8,7 @@ from pydantic import BaseModel
 from config import settings
 from models.elasticsearch import *
 from models.scheduler import TaskScheduler
+from models.score import ScoreRule, ScoreType
 from models.storage.document import ElasticSearchModel
 from storage.repository import IRepository
 
@@ -29,7 +31,7 @@ class ElasticSearchRepository(IRepository[E]):
             raise ValueError("Repository must specify a index")
         self.index = index
 
-    def get_all(self, query: Optional[dict] = None) -> List[E]:
+    def get_all(self, query: Optional[dict] = None, index: str = None) -> List[E]:
         records: List[E] = []
         page_size = 1000
 
@@ -39,7 +41,7 @@ class ElasticSearchRepository(IRepository[E]):
 
         # initial search with scroll
         resp = es_client.search(
-            index=self.index,
+            index=self.index if index is None else index,
             body=query,
             scroll="1m",
             size=page_size
@@ -66,9 +68,9 @@ class ElasticSearchRepository(IRepository[E]):
 
         return records
 
-    def query_list(self, query: Any) -> List[E]:
+    def query_list(self, query: Any, index: str = None) -> List[E]:
         records: List[E] = []
-        res = es_client.search(index=self.index, body=query)
+        res = es_client.search(index=self.index if index is None else index, body=query)
         if "hits" not in res:
             return records
         for hit in res["hits"]["hits"]:
@@ -77,9 +79,9 @@ class ElasticSearchRepository(IRepository[E]):
             records.append(record)
         return records
 
-    def get_by_id(self, id: str) -> Optional[E]:
+    def get_by_id(self, id: str, index: str = None) -> Optional[E]:
         try:
-            res = es_client.get(index=self.index, id=id)
+            res = es_client.get(index=self.index if index is None else index, id=id)
         except Exception as e:
             logger.error(e)
             return None
@@ -92,18 +94,18 @@ class ElasticSearchRepository(IRepository[E]):
         record.id = res["_id"]
         return record
 
-    def delete_by_id(self, id: str) -> bool:
+    def delete_by_id(self, id: str, index: str = None) -> bool:
         try:
-            res = es_client.delete(index=self.index, id=id)
+            res = es_client.delete(index=self.index if index is None else index, id=id)
         except Exception as e:
             logger.error(e)
             return False
         return res.get("result") == "deleted"
 
-    def merge(self, record: E) -> bool:
+    def merge(self, record: E, index: str = None) -> bool:
         try:
             res = es_client.update(
-                index=self.index,
+                index=self.index if index is None else index,
                 id=record.id,
                 doc=record.model_dump(exclude_none=True, mode="json"),
                 doc_as_upsert=True,
@@ -114,7 +116,7 @@ class ElasticSearchRepository(IRepository[E]):
             logger.error(e)
             return False
 
-    def batch_insert(self, records: List[E]) -> bool:
+    def batch_insert(self, records: List[E], index: str = None) -> bool:
         """
         批量添加IP记录
         """
@@ -123,7 +125,7 @@ class ElasticSearchRepository(IRepository[E]):
         try:
             actions = (
                 {
-                    "_index": self.index,
+                    "_index": self.index if index is None else index,
                     "_source": record.model_dump(exclude_none=True)
                 }
                 for record in records
@@ -146,7 +148,7 @@ class ElasticSearchRepository(IRepository[E]):
             logger.error(f"{self.index} batch insert error: {e}")
             return False
 
-    def batch_merge(self, records: List[E]) -> bool:
+    def batch_merge(self, records: List[E], index: str = None) -> bool:
         """
           批量添加IP记录
           """
@@ -154,7 +156,7 @@ class ElasticSearchRepository(IRepository[E]):
             actions = (
                 {
                     "_op_type": "update",
-                    "_index": self.index,
+                    "_index": self.index if index is None else index,
                     "_id": record.id,
                     "doc": record.model_dump(exclude_none=True, mode="json"),
                     "doc_as_upsert": True
@@ -176,10 +178,10 @@ class ElasticSearchRepository(IRepository[E]):
             logger.error(e)
             return False
 
-    def count(self, query: Any = None) -> int:
+    def count(self, query: Any = None, index: str = None) -> int:
         if query is None:
             query = {"query": {"match_all": {}}}
-        res = es_client.count(index=self.index, body=query)
+        res = es_client.count(index=self.index if index is None else index, body=query)
         return res.get("count", 0)
 
     def create_index(self, index_name: str, index_template: dict):
@@ -247,6 +249,8 @@ def init_elasticsearch():
                 raise Exception(f"{index_name} index init error: {res}")
     # 定时任务初始化
     __init_task_scheduler()
+    # 评分规则初始化
+    __score_role_init()
 
 
 def __init_task_scheduler():
@@ -296,6 +300,105 @@ def __init_task_scheduler():
         ),
     ]
     data_init("task_scheduler", configs)
+
+
+def __score_role_init():
+    """
+    初始化评分规则
+    :return:
+    """
+    score_rules: List[ScoreRule] = [
+        ScoreRule(
+            id="dynamic_count_high",
+            rule_name="high_request_count",
+            score_type=ScoreType.DYNAMIC,
+            condition="count > 500",
+            formula="2",
+            description="count 大于 500 加分",
+            enabled=True,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        ),
+        ScoreRule(
+            id="dynamic_static_zero",
+            rule_name="no_static_requests",
+            score_type=ScoreType.DYNAMIC,
+            condition="path_categories_STATIC == 0",
+            formula="2",
+            description="静态页面为0",
+            enabled=True,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        ),
+        ScoreRule(
+            id="dynamic_path_length_low",
+            rule_name="few_paths_accessed",
+            score_type=ScoreType.DYNAMIC,
+            condition="path_length <= 2",
+            formula="2",
+            description="路径长度小于等于2",
+            enabled=True,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        ),
+        ScoreRule(
+            id="dynamic_ua_count_high",
+            rule_name="many_user_agents",
+            score_type=ScoreType.DYNAMIC,
+            condition="http_user_agent_length >= 5",
+            formula="2",
+            description="ua 多于5个",
+            enabled=True,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        ),
+        ScoreRule(
+            id="dynamic_referer_low",
+            rule_name="low_referer_usage",
+            score_type=ScoreType.DYNAMIC,
+            condition="referer_categories_non_empty_referer <= 1",
+            formula="2",
+            description="referer 有值的小于等于1",
+            enabled=True,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        ),
+        ScoreRule(
+            id="dynamic_status_200_zero",
+            rule_name="no_successful_requests",
+            score_type=ScoreType.DYNAMIC,
+            condition="status_200 <= 0",
+            formula="5",
+            description="状态码200等于0",
+            enabled=True,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        ),
+        ScoreRule(
+            id="dynamic_status_200_ratio_low",
+            rule_name="low_success_rate",
+            score_type=ScoreType.DYNAMIC,
+            condition="status_200 / count <= 0.5",
+            formula="5",
+            description="请求状态码200比例小于0.5",
+            enabled=True,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        ),
+        ScoreRule(
+            id="dynamic_normal_path_ratio_high",
+            rule_name="high_normal_path_ratio",
+            score_type=ScoreType.DYNAMIC,
+            condition="path_categories_NORMAL / count >=0.7",
+            formula="5",
+            description="NORMAL 比例大于0.7",
+            enabled=True,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        ),
+    ]
+
+    data_init("score_rule", score_rules)
 
 
 def data_init(index_name: str, data: List[BaseModel]):

@@ -125,6 +125,22 @@ class AccessIpAggregationManager(ElasticSearchRepository[AccessIpAggregation]):
             result.append(access_ip_agg)
         return result
 
+    def get_all_by_batch_id(self, batch_id: str) -> List[AccessIpAggregation]:
+        """
+        通过批次ID查询
+        :param batch_id:
+        :return:
+        """
+        index_name = f"{self.PREFIX}{batch_id[:10]}"
+        query = {
+            "query": {
+                "term": {
+                    "batch_id": batch_id
+                }
+            }
+        }
+        return self.get_all(query=query, index=index_name)
+
     @staticmethod
     def parse_terms_buckets(buckets):
         """解析 terms 聚合成 List[KeyValue]"""
@@ -262,6 +278,7 @@ class AccessIpAggregationManager(ElasticSearchRepository[AccessIpAggregation]):
         # referer
         ref_empty = ratio(access_ip_agg.referer_categories, "empty_referer")
         ref_non_empty = 1 - ref_empty
+
         # UA 特征
         def parse_ua_features(ua_list):
             total = sum(kv.value for kv in ua_list) or 1

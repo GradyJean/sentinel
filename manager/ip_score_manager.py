@@ -11,6 +11,7 @@ class ScoreRuleManager(ElasticSearchRepository[ScoreRule]):
         super().__init__("score_rule", ScoreRule)
 
 
+
 class ScoreRecordManager(ElasticSearchRepository[ScoreRecord]):
     """
     分数记录服务
