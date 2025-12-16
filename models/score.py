@@ -55,7 +55,7 @@ class ScoreRecord(ElasticSearchModel):
     batch_id: str = Field(default="")  # 批次ID
 
 
-class ScoreAggregate(ElasticSearchModel):
+class IpSummary(ElasticSearchModel):
     """
     评分聚合
     """
@@ -63,12 +63,16 @@ class ScoreAggregate(ElasticSearchModel):
     score_fixed: float = 0  # 固定评分
     score_dynamic: float = 0  # 动态评分
     score_feature: float = 0  # 特征评分
-    score_total: float = 0  # 总评分
+    score_total: float = Field(default=0, exclude=True)  # 总评分
+    feature_tags: List[str] = Field(default_factory=list)  # 特征标签
+    ip_enrich: IpEnrich = Field(default_factory=IpEnrich)  # IP 地址信息
     last_update: datetime = Field(default=datetime.now())
 
     @model_validator(mode="after")
     def auto_fix(self) -> Self:
         self.score_total = self.score_fixed + self.score_dynamic + self.score_feature
+        self.id = self.ip
+        return self
 
 
 UA_KEYWORDS = {

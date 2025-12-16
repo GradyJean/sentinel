@@ -24,20 +24,8 @@ class ScoreTask(TaskRunner):
         self.score_engine = ScoreEngine(rules=self.get_rules())
 
     def run(self):
-        query = {
-            "query": {
-                "term": {
-                    "status": "AGGREGATED"
-                }
-            }, "sort": [
-                {
-                    "batch_id": {
-                        "order": "asc"
-                    }
-                }]
-        }
         # 获取批次数据
-        batches = self.log_metadata_batch_manager.get_all(query=query)
+        batches = self.log_metadata_batch_manager.get_all_by_status(status=BatchStatus.AGGREGATED)
         for batch in batches:
             batch_id = batch.batch_id
             # 批次状态更新
@@ -48,6 +36,7 @@ class ScoreTask(TaskRunner):
             # 计算分数
             score_records = self.calculate_scores(aggregation_ips)
             # 保存分数
+            self.score_record_manager.create_daily_index(batch_id[:10])
             self.score_record_manager.batch_insert(score_records)
             # 批次状态更新
             batch.status = BatchStatus.SCORED

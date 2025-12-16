@@ -223,8 +223,8 @@ index_template_dict = {
     "task_scheduler": {"value": task_scheduler_template, "init": True},
     "access_ip_aggregation": {"value": access_ip_aggregation_template, "init": False},
     "score_rule": {"value": score_rule_template, "init": True},
-    "score_record": {"value": score_record_template, "init": True},
-    "score_aggregate": {"value": score_aggregate_template, "init": True},
+    "score_record": {"value": score_record_template, "init": False},
+    "ip_summary": {"value": ip_summary_template, "init": True},
     "punish_level": {"value": punish_level_template, "init": True},
     "punish_record": {"value": punish_record_template, "init": True},
     "system_config": {"value": system_config_template, "init": True}
@@ -310,6 +310,14 @@ def __init_task_scheduler():
             cron="4-59/5 * * * *",
             description="惩处任务 每5分钟执行一次 从第三分钟开始触发 延时于评分任务"
         ),
+        TaskScheduler(
+            id="score_decay_task",
+            task_id="score_decay_task",
+            task_name="分数衰减任务",
+            enabled=True,
+            cron="*/2 * * * *",
+            description="分数衰减任务 每2分钟执行一次"
+        ),
     ]
     data_init("task_scheduler", configs)
 
@@ -327,6 +335,28 @@ def __score_role_init():
             condition="count > 500",
             formula="2",
             description="count 大于 500 加分",
+            enabled=True,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        ),
+        ScoreRule(
+            id="dynamic_count_mid_high",
+            rule_name="high_request_count",
+            score_type=ScoreType.DYNAMIC,
+            condition="count > 1000",
+            formula="5",
+            description="count 大于 1000 加分",
+            enabled=True,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        ),
+        ScoreRule(
+            id="dynamic_count_very_high",
+            rule_name="high_request_count",
+            score_type=ScoreType.DYNAMIC,
+            condition="count > 2000",
+            formula="10",
+            description="count 大于 1000 加分",
             enabled=True,
             created_at=datetime.now(),
             updated_at=datetime.now()
@@ -408,6 +438,28 @@ def __score_role_init():
             created_at=datetime.now(),
             updated_at=datetime.now()
         ),
+        ScoreRule(
+            id="dynamic_bot_high",
+            rule_name="dynamic_bot_high",
+            score_type=ScoreType.DYNAMIC,
+            condition="http_user_agent_bot > 0",
+            formula="count * 0.2",
+            description="爬虫行为加分 请求次数乘以0.2",
+            enabled=True,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        ),
+        ScoreRule(
+            id="dynamic_scan_high",
+            rule_name="dynamic_scan_high",
+            score_type=ScoreType.DYNAMIC,
+            condition="http_user_agent_scanner > 0",
+            formula="count * 0.4",
+            description="扫描行为 请求次数乘以0.4",
+            enabled=True,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        ),
     ]
 
     data_init("score_rule", score_rules)
@@ -421,6 +473,30 @@ def __system_config_init():
             value="7",
             type=SystemConfigType.INT,
             description="数据清理保留天数，默认7天",
+            updated_at=datetime.now()
+        ),
+        SystemConfig(
+            id="score_decay_factor_fixed",
+            key="score_decay_factor_fixed",
+            value="0",
+            type=SystemConfigType.FLOAT,
+            description="分数衰减因子，固定分数，默认0 不衰减",
+            updated_at=datetime.now()
+        ),
+        SystemConfig(
+            id="score_decay_factor_dynamic",
+            key="score_decay_factor_dynamic",
+            value="0.2",
+            type=SystemConfigType.FLOAT,
+            description="分数衰减因子，动态分数，0.2",
+            updated_at=datetime.now()
+        ),
+        SystemConfig(
+            id="score_decay_factor_feature",
+            key="score_decay_factor_feature",
+            value="0.02",
+            type=SystemConfigType.FLOAT,
+            description="分数衰减因子，特征分数，0.02",
             updated_at=datetime.now()
         )
     ]

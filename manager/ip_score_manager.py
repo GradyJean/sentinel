@@ -3,7 +3,7 @@ from typing import List
 
 from loguru import logger
 
-from models.score import ScoreRule, ScoreRecord, ScoreAggregate
+from models.score import ScoreRule, ScoreRecord, IpSummary
 from storage.document import ElasticSearchRepository
 
 
@@ -21,7 +21,7 @@ class ScoreRecordManager(ElasticSearchRepository[ScoreRecord]):
     分数记录服务
     """
     PREFIX = "score_record_"
-    TEMPLATE_NAME = "score_record_template"
+    TEMPLATE_NAME = "score_record"
 
     def __init__(self):
         super().__init__("score_record", ScoreRecord)
@@ -62,10 +62,10 @@ class ScoreRecordManager(ElasticSearchRepository[ScoreRecord]):
                 continue
 
 
-class ScoreAggregateManager(ElasticSearchRepository[ScoreAggregate]):
+class IpSummaryManager(ElasticSearchRepository[IpSummary]):
     """
     分数聚合服务
     """
 
     def __init__(self):
-        super().__init__("score_aggregate", ScoreAggregate)
+        super().__init__("ip_summary", IpSummary)

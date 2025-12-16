@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -95,7 +95,7 @@ class SystemConfig(ElasticSearchModel):
     updated_at: datetime = Field(default=datetime.now())
 
     @model_validator(mode="after")
-    def auto_fix(self):
+    def auto_fix(self) -> Self:
         match self.type:
             case SystemConfigType.STRING:
                 self.value = str(self.value)
@@ -107,3 +107,4 @@ class SystemConfig(ElasticSearchModel):
                 self.value = bool(self.value)
             case SystemConfigType.JSON:
                 self.value = dict(self.value)
+        return  self

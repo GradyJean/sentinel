@@ -3,7 +3,7 @@ from typing import List
 
 from loguru import logger
 
-from models.log import LogMetaData, LogMetaDataBatch
+from models.log import LogMetaData, LogMetaDataBatch, BatchStatus
 from storage.document import ElasticSearchRepository
 
 
@@ -60,6 +60,21 @@ class LogMetaDataBatchManager(ElasticSearchRepository[LogMetaDataBatch]):
 
     def __init__(self):
         super().__init__("log_metadata_batch", LogMetaDataBatch)
+
+    def get_all_by_status(self, status: BatchStatus) -> List[LogMetaDataBatch]:
+        query = {
+            "query": {
+                "term": {
+                    "status": f"{status.value}"
+                }
+            }, "sort": [
+                {
+                    "batch_id": {
+                        "order": "asc"
+                    }
+                }]
+        }
+        return self.get_all(query=query)
 
     def cleanup_records(self, keep_days: int = 7):
         cutoff_date = datetime.now() - timedelta(days=keep_days)

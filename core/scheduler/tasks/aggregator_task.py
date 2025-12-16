@@ -10,19 +10,7 @@ class LogAggregatorTask(TaskRunner):
     access_ip_aggregation_manager = AccessIpAggregationManager()
 
     def run(self):
-        query = {
-            "query": {
-                "term": {
-                    "status": "COLLECTED"
-                }
-            }, "sort": [
-                {
-                    "batch_id": {
-                        "order": "asc"
-                    }
-                }]
-        }
-        batches = self.log_metadata_batch_manager.get_all(query=query)
+        batches = self.log_metadata_batch_manager.get_all_by_status(BatchStatus.COLLECTED)
         for batch in batches:
             batch_id = batch.batch_id
             # 批次状态更新

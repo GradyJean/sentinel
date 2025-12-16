@@ -453,7 +453,7 @@ score_record_template = {
         }
     }
 }
-score_aggregate_template = {
+ip_summary_template = {
     "settings": {
         "number_of_shards": 5,
         "number_of_replicas": 0
@@ -464,6 +464,17 @@ score_aggregate_template = {
             "ip": {
                 "type": "ip"
             },
+            "ip_enrich": {
+                "properties": {
+                    "allowed": {"type": "boolean"},
+                    "org_name": {"type": "keyword"},
+                    "city_name": {"type": "keyword"},
+                    "country_name": {"type": "keyword"},
+                    "country_code": {"type": "keyword"},
+                    "continent_name": {"type": "keyword"},
+                    "continent_code": {"type": "keyword"}
+                }
+            },
             "score_fixed": {
                 "type": "float"
             },
@@ -472,6 +483,9 @@ score_aggregate_template = {
             },
             "score_feature": {
                 "type": "float"
+            },
+            "feature_tags": {
+                "type": "keyword"
             },
             "last_update": {
                 "type": "date"
@@ -558,7 +572,7 @@ system_config_template = {
                     }
                 }
             },
-            "update_time": {
+            "updated_at": {
                 "type": "date"
             }
         }
