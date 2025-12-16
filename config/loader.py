@@ -30,9 +30,12 @@ def load_config(config_path: str) -> Config:
         config.server.static_path = __fix_url(config.server.static_path)
         config.geoip.data_path = __fix_url(config.geoip.data_path)
         return config
+    except ValidationError as e:
+        logging.error(f"Failed to validate config: {e}")
+        raise
     except Exception as e:
         logging.error(f"Failed to load or validate config: {e}")
-        raise ValidationError(f"Failed to load or validate config: {e}")
+        raise RuntimeError(f"Failed to load or validate config: {e}") from e
 
 
 def __fix_url(url: str) -> str:
