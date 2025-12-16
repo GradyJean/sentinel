@@ -1,7 +1,11 @@
 import re
 from datetime import datetime
+from enum import Enum
+from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+from models.storage.document import ElasticSearchModel
 
 """
 配置类
@@ -67,3 +71,39 @@ class GeoIpConfig(BaseModel):
     geoip 配置
     """
     data_path: str = Field(default="./data/GeoLite2-City.mmdb")
+
+
+class SystemConfigType(str, Enum):
+    """
+    系统配置类型
+    """
+    STRING = "STRING"
+    INT = "INT"
+    FLOAT = "FLOAT"
+    BOOLEAN = "BOOLEAN"
+    JSON = "JSON"
+
+
+class SystemConfig(ElasticSearchModel):
+    """
+    系统配置
+    """
+    key: str = Field(default="")
+    value: Any = Field(default=None)
+    type: SystemConfigType = Field(default=SystemConfigType.STRING)
+    description: str = Field(default="")
+    updated_at: datetime = Field(default=datetime.now())
+
+    @model_validator(mode="after")
+    def auto_fix(self):
+        match self.type:
+            case SystemConfigType.STRING:
+                self.value = str(self.value)
+            case SystemConfigType.INT:
+                self.value = int(self.value)
+            case SystemConfigType.FLOAT:
+                self.value = float(self.value)
+            case SystemConfigType.BOOLEAN:
+                self.value = bool(self.value)
+            case SystemConfigType.JSON:
+                self.value = dict(self.value)

@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from config import settings, setup_logger
+from manager.system_config_manager import SystemConfigManager
 from storage.document import init_elasticsearch
 from storage.database import init_database
 from core.scheduler.scheduler import SchedulerManager
@@ -25,6 +26,10 @@ async def lifespan(app: FastAPI):
     # 初始化索引
     init_elasticsearch()
     logger.info("elasticsearch initialized")
+    # 加载系统配置
+    system_config_manager = SystemConfigManager()
+    system_config_manager.load_config()
+    logger.info("system config loaded")
     # 启动定时任务
     scheduler_manager = SchedulerManager()
     scheduler_manager.start()

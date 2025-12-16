@@ -6,6 +6,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from config import settings
+from models.config import SystemConfig, SystemConfigType
 from models.elasticsearch import *
 from models.scheduler import TaskScheduler
 from models.score import ScoreRule, ScoreType
@@ -225,7 +226,8 @@ index_template_dict = {
     "score_record": {"value": score_record_template, "init": True},
     "score_aggregate": {"value": score_aggregate_template, "init": True},
     "punish_level": {"value": punish_level_template, "init": True},
-    "punish_record": {"value": punish_record_template, "init": True}
+    "punish_record": {"value": punish_record_template, "init": True},
+    "system_config": {"value": system_config_template, "init": True}
 }
 
 
@@ -251,6 +253,8 @@ def init_elasticsearch():
     __init_task_scheduler()
     # 评分规则初始化
     __score_role_init()
+    # 系统配置初始化
+    __system_config_init()
 
 
 def __init_task_scheduler():
@@ -407,6 +411,20 @@ def __score_role_init():
     ]
 
     data_init("score_rule", score_rules)
+
+
+def __system_config_init():
+    system_configs: List[SystemConfig] = [
+        SystemConfig(
+            id="record_keep_days",
+            key="record_keep_days",
+            value="7",
+            type=SystemConfigType.INT,
+            description="数据清理保留天数，默认7天",
+            updated_at=datetime.now()
+        )
+    ]
+    data_init("system_config", system_configs)
 
 
 def data_init(index_name: str, data: List[BaseModel]):

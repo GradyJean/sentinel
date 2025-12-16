@@ -531,3 +531,36 @@ punish_record_template = {
         }
     }
 }
+system_config_template = {
+    "settings": {
+        "number_of_shards": 5,
+        "number_of_replicas": 0
+    },
+    "mappings": {
+        "dynamic": "strict",
+        "properties": {
+            "key": {
+                "type": "keyword"
+            },
+            "type": {
+                "type": "keyword"
+            },
+            "value": {
+                "type": "keyword",
+                "ignore_above": 4096
+            },
+            "description": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
+                    }
+                }
+            },
+            "update_time": {
+                "type": "date"
+            }
+        }
+    }
+}

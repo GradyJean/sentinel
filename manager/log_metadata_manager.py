@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import List
 
 from loguru import logger
 
@@ -30,6 +31,22 @@ class LogMetaDataManager(ElasticSearchRepository[LogMetaData]):
                 logger.error(f"Error deleting index: {index}: {e}")
                 continue
 
+    def get_all_by_batch_id(self, batch_id: str) -> List[LogMetaData]:
+        """
+        通过批次ID查询
+        :param batch_id:
+        :return:
+        """
+        index_name = f"{self.PREFIX}{batch_id[:10]}"
+        query = {
+            "query": {
+                "term": {
+                    "batch_id": batch_id
+                }
+            }
+        }
+        return self.get_all(query=query, index=index_name)
+
     def create_daily_index(self, index_stuff: str):
         index_name = f"{self.PREFIX}{index_stuff}"
         template = self.get_index_template(index_name=self.TEMPLATE_NAME)
@@ -43,3 +60,27 @@ class LogMetaDataBatchManager(ElasticSearchRepository[LogMetaDataBatch]):
 
     def __init__(self):
         super().__init__("log_metadata_batch", LogMetaDataBatch)
+
+    def cleanup_records(self, keep_days: int = 7):
+        cutoff_date = datetime.now() - timedelta(days=keep_days)
+        cutoff_str = cutoff_date.strftime("%Y_%m_%d")
+        # 查询所有批次记录，使用通配符匹配日期前缀
+        query = {
+            "query": {
+                "range": {
+                    "batch_id": {
+                        "lt": f"{cutoff_str}_23:59"  # 使用截止日期的最大时间
+                    }
+                }
+            }
+        }
+        # 删除符合条件的记录
+        try:
+            self.get_client().delete_by_query(
+                index=self.index,
+                body=query,
+                conflicts="proceed"
+            )
+            logger.info(f"Deleted records older than {keep_days} days")
+        except Exception as e:
+            logger.error(f"Error deleting old records: {e}")

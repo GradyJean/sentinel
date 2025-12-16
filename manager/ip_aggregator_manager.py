@@ -1,5 +1,6 @@
 import ipaddress
 import math
+from datetime import datetime, timedelta
 from typing import List, Union
 
 from loguru import logger
@@ -124,6 +125,20 @@ class AccessIpAggregationManager(ElasticSearchRepository[AccessIpAggregation]):
             # 写入结果
             result.append(access_ip_agg)
         return result
+
+    def cleanup_indices(self, keep_days: int = 7):
+        cutoff = datetime.now() - timedelta(days=keep_days)
+        indices = self.get_client().indices.get(index=f"{self.PREFIX}*")
+        for index in indices:
+            try:
+                date_str = index.replace(self.PREFIX, "")
+                index_date = datetime.strptime(date_str, "%Y_%m_%d")
+                if index_date < cutoff:
+                    logger.info(f"Deleting index: {index}")
+                    self.get_client().indices.delete(index=index)
+            except Exception as e:
+                logger.error(f"Error deleting index: {index}: {e}")
+                continue
 
     def get_all_by_batch_id(self, batch_id: str) -> List[AccessIpAggregation]:
         """
