@@ -440,10 +440,10 @@ def __score_role_init():
         ScoreRule(
             id="dynamic_bot_high",
             rule_name="dynamic_bot_high",
-            score_type=ScoreType.DYNAMIC,
+            score_type=ScoreType.FEATURE,
             condition="http_user_agent_bot > 0",
-            formula="count * 0.2",
-            description="爬虫行为加分 请求次数乘以0.2",
+            formula="count * 0.02",
+            description="爬虫行为加分 请求次数乘以0.02",
             enabled=True,
             created_at=datetime.now(),
             updated_at=datetime.now()
@@ -451,7 +451,7 @@ def __score_role_init():
         ScoreRule(
             id="dynamic_scan_high",
             rule_name="dynamic_scan_high",
-            score_type=ScoreType.DYNAMIC,
+            score_type=ScoreType.FIXED,
             condition="http_user_agent_scanner > 0",
             formula="count * 0.4",
             description="扫描行为 请求次数乘以0.4",
