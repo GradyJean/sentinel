@@ -18,7 +18,7 @@ class ServerConfig(BaseModel):
     """
     host: str = Field(default="0.0.0.0")
     port: int = Field(default=8080)
-    base_path: str = Field(default="")
+    root_path: str = Field(default="")
     static_path: str = Field(default="./static")
 
 
@@ -26,7 +26,7 @@ class NginxConfig(BaseModel):
     """
     Nginx 配置
     """
-    base_path: str = Field(...)
+    root_path: str = Field(...)
     log_path: str = Field(...)
     conf_path: str = Field(...)
     black_list_file: str = Field(...)

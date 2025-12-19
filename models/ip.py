@@ -73,7 +73,7 @@ class IpProfile(ElasticSearchModel):
     """
     ip: str  # IP
     score: Score = Field(default_factory=Score)  # 评分
-    total_metadata: TotalMetadata = Field(default_factory=TotalMetadata)  # 总数据
+    # total_metadata: TotalMetadata = Field(default_factory=TotalMetadata)  # 总数据
     feature_tags: List[str] = Field(default_factory=list)  # 特征标签
     ip_enrich: IpEnrich = Field(default_factory=IpEnrich)  # IP 地址信息
     create_at: datetime = Field(default=datetime.now())

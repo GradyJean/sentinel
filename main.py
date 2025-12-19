@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
     logger.info("elasticsearch initialized")
     # 启动定时任务
     scheduler_manager = SchedulerManager()
-    scheduler_manager.start()
+    # scheduler_manager.start()
     logger.info("scheduler started")
     logger.info(f"application initialized with {settings.server.host}:{settings.server.port}")
     logger.info("application startup complete")
@@ -40,7 +40,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    lifespan=lifespan
+    lifespan=lifespan,
+    root_path=settings.server.root_path,
 )
 # 跨域
 app.add_middleware(
@@ -56,7 +57,8 @@ app.add_middleware(
 add_exception_handlers(app)
 # ---路由---
 # 挂载 API
-# app.include_router(subject_common_router, prefix="/tech")
+api_router = APIRouter(prefix="")
+app.include_router(api_router, prefix="/api")
 # 挂载前端 ui 目录
 app.mount('/', StaticFiles(directory=settings.server.static_path, html=True), name="ui")
 
